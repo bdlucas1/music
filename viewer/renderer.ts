@@ -187,7 +187,7 @@ class Score {
             $(Score.current.div!).hide()
         Score.current = this
         $(this.div).show()
-        this.div.scrollIntoView({behavior: 'smooth'})
+        show("#scores")
     }
 }
 
