@@ -1,0 +1,23 @@
+{
+    "name": "viewer",
+    "version": "1.0.0",
+    "description": "PDF Music Score Viewer",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "repository": "https://github.com/bdlucas1/music/viewer",
+    "keywords": [
+        "PDF",
+        "music",
+        "score",
+        "viewer"
+    ],
+    "author": "Bruce Lucas",
+    "devDependencies": {},
+    "dependencies": {
+        "electron": "^2.0.2",
+        "jquery": "^3.3.1",
+        "pdfjs-dist": "^2.0.489"
+    }
+}
