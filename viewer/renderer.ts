@@ -67,8 +67,10 @@ class SortedArray<T> {
 let showing: '#score-list' | '#scores' = '#score-list'
 
 function show(what: '#score-list' | '#scores') {
-    showing = what
-    $(showing)[0].scrollIntoView({behavior: 'smooth'})    
+    if (showing != what) {
+        showing = what
+        $(showing)[0].scrollIntoView({behavior: 'smooth'})
+    }
 }
 
 $(document).ready(() => {
@@ -78,16 +80,11 @@ $(document).ready(() => {
     remote.BrowserWindow.getAllWindows()[0].show()
     //test()
 
-    $('#scores').on('mousemove', (e) => {
-        if (e.clientX! < 10) {
-            show('#score-list')
-        }
-    })
-
-    $('#score-list').on('mousemove', (e) => {
-        if (e.clientX! > window.innerWidth - 10) {
-            show('#scores')
-        }
+    $('body').on('wheel', (e) => {
+        const dx = e.originalEvent.deltaX
+        const dy = e.originalEvent.deltaY
+        if (Math.abs(dx) > 2 * Math.abs(dy))
+            show(dx > 0? '#scores' : '#score-list')
     })
 
     $(window).on('resize', () => {
