@@ -67,10 +67,13 @@ class SortedArray<T> {
 let showing: '#score-list' | '#scores' = '#score-list'
 
 function show(what: '#score-list' | '#scores') {
-    if (showing != what) {
-        showing = what
-        $(showing)[0].scrollIntoView({behavior: 'smooth'})
-    }
+    showing = what
+    $(showing)[0].scrollIntoView({behavior: 'smooth'})
+}
+
+function showIfNeeded(what: '#score-list' | '#scores') {
+    if (showing != what)
+        show(what)
 }
 
 $(document).ready(() => {
@@ -84,11 +87,11 @@ $(document).ready(() => {
         const dx = e.originalEvent.deltaX
         const dy = e.originalEvent.deltaY
         if (Math.abs(dx) > 2 * Math.abs(dy))
-            show(dx > 0? '#scores' : '#score-list')
+            showIfNeeded(dx > 0? '#scores' : '#score-list')
     })
 
     $(window).on('resize', () => {
-        show(showing)
+        $(showing)[0].scrollIntoView({})
     })
                  
 })
