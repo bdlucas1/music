@@ -4,7 +4,7 @@
   "description": "PDF Music Score Viewer",
   "main": "main.js",
   "scripts": {
-    "prestart": "chmod u+w *.js; tsc *.ts; chmod a-w *.js",
+    "prestart": "chmod u+w *.js; tsc *.ts || exit -1; chmod a-w *.js",
     "start": "electron ."
   },
   "repository": "https://github.com/bdlucas1/music/viewer",
