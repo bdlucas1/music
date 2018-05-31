@@ -1,23 +1,25 @@
 {
-    "name": "viewer",
-    "version": "1.0.0",
-    "description": "PDF Music Score Viewer",
-    "main": "main.js",
-    "scripts": {
-        "start": "electron ."
-    },
-    "repository": "https://github.com/bdlucas1/music/viewer",
-    "keywords": [
-        "PDF",
-        "music",
-        "score",
-        "viewer"
-    ],
-    "author": "Bruce Lucas",
-    "devDependencies": {},
-    "dependencies": {
-        "electron": "^2.0.2",
-        "jquery": "^3.3.1",
-        "pdfjs-dist": "^2.0.489"
-    }
+  "name": "Viewer",
+  "version": "0.0.0",
+  "description": "PDF Music Score Viewer",
+  "main": "main.js",
+  "scripts": {
+    "prestart": "chmod u+w *.js; tsc *.ts; chmod a-w *.js",
+    "start": "electron ."
+  },
+  "repository": "https://github.com/bdlucas1/music/viewer",
+  "keywords": [
+    "PDF",
+    "music",
+    "score",
+    "viewer"
+  ],
+  "author": "Bruce Lucas",
+  "devDependencies": {},
+  "dependencies": {
+    "electron": "^2.0.2",
+    "jquery": "^3.3.1",
+    "pdfjs-dist": "^2.0.489",
+    "typescript": "^2.8.4"
+  }
 }
