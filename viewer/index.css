@@ -20,6 +20,11 @@ body {
     overflow-y: scroll;
     padding-top: 3em;
     padding-left: 3em;    
+    padding-right: 3em;
+}
+
+#score-list-table {
+    width: 100%;
 }
 
 .score-state {
