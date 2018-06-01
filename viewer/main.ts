@@ -5,8 +5,8 @@ let win : BrowserWindow | null
 
 app.on('ready', () => {
     win = new BrowserWindow({
-        width: 800,
-        height: 450,
+        width: 1280,
+        height: 720,
         show: false
         //webPreferences: {plugins: true}
     })
