@@ -44,13 +44,12 @@ class SortedArray<T> {
             else
                 return mid // key found
         }
-        //return -(low + 1)  // key not found.
-        return -(high + 1)
+        return -(low + 1)  // key not found.
     }
 
     insert(e: T): number {
         let i = this.bs(e)
-        if (i < 0) i = -i
+        if (i < 0) i = -i - 1
         this.items.splice(i, 0, e)
         return i
     }
@@ -61,7 +60,6 @@ class SortedArray<T> {
             this.items.splice(i, 1)
         return i
     }
-
 }
 
 let showing: '#score-list' | '#scores' = '#score-list'
