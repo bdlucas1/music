@@ -105,49 +105,71 @@ class Score {
     static sorted: SortedArray<Score> = new SortedArray((a, b) => a.compare(b))
     static byPath: {[fn: string]: Score} = {}
 
+    fn: string
     path: string
+
     pdf: PDFDocumentProxy | null = null
-    div: HTMLElement | null = null
-    state: HTMLElement | null = null
     author: string = ''
     title: string = ''
     key: string[] = []
 
+    scoreDiv: HTMLElement | null = null
+    stateCell: HTMLElement | null = null
+
     constructor(dn: string, fn: string) {
+
+        this.fn = fn
         this.path = dn + '/' + fn
+
+        const existing = Score.byPath[this.path]
+        const current = existing && existing == Score.current
+
         PDFJS.getDocument(this.path).then((pdf) => {
-            Score.byPath[this.path] = this
             this.pdf = pdf
             this.pdf.getMetadata().then((md) => {
                 this.title = md.info.Title || fn
                 this.author = md.info.Author || '\x7f' // no author sorts to end
                 this.key = [this.author.toLowerCase(), this.title.toLowerCase()]
-                const i = Score.sorted.insert(this)
-                const table = $('#score-list-table')
-                const trs = table.find('tr')
-                const before = trs[i]
-                const tr = $('<tr>')
-                    .attr('id', fn)
-                    .on('click', () => {this.show()})
-                    .insertBefore(before)
-                this.state = $('<td>')
-                    .addClass('score-state')
-                    .appendTo(tr)[0]
-                $('<td>')
-                    .addClass('score-title')
-                    .text(this.title)
-                    .appendTo(tr)
-                $('<td>')
-                    .addClass('score-author')
-                    .text(this.author)
-                    .appendTo(tr)
-
+                if (existing)
+                    existing.remove()
+                this.add()
+                if (current)
+                    this.show()
             })
+        }).catch((e) => {
+            if (existing)
+                existing.remove()
         })
     }
 
     compare(that: Score): number {
         return this.key > that.key? 1 : this.key < that.key? -1 : 0
+    }
+
+    add() {
+        Score.byPath[this.path] = this
+        const i = Score.sorted.insert(this)
+        const table = $('#score-list-table')
+        const trs = table.find('tr')
+        const before = trs[i]
+        const tr = $('<tr>')
+            .attr('id', this.fn)
+            .on('click', () => {
+                this.show()
+                show("#scores")
+            })
+            .insertBefore(before)
+        this.stateCell = $('<td>')
+            .addClass('score-state')
+            .appendTo(tr)[0]
+        $('<td>')
+            .addClass('score-title')
+            .text(this.title)
+            .appendTo(tr)
+        $('<td>')
+            .addClass('score-author')
+            .text(this.author)
+            .appendTo(tr)
     }
 
     remove() {
@@ -156,22 +178,22 @@ class Score {
         delete Score.byPath[this.path]
         if (Score.current == this)
             Score.current = null
-        if (this.div)
-            $(this.div).remove()
+        if (this.scoreDiv)
+            $(this.scoreDiv).remove()
     }
 
     show() {
         if (this.pdf==null)
             return;
         const dot = '🔵'
-        $(this.state!).text(dot)
-        if (this.div==null) {
-            this.div = $('<div>')
+        $(this.stateCell!).text(dot)
+        if (this.scoreDiv==null) {
+            this.scoreDiv = $('<div>')
                 .addClass('score')
                 .appendTo('#scores')[0]
             const canvas = <HTMLCanvasElement> $('<canvas>')
                 .addClass('score-canvas')
-                .appendTo(this.div)[0]
+                .appendTo(this.scoreDiv)[0]
             this.pdf.getPage(1).then((page) => {
                 const scale = 4 // optimal value??
                 const viewport = page.getViewport(scale)
@@ -186,10 +208,9 @@ class Score {
             })
         }
         if (Score.current)
-            $(Score.current.div!).hide()
+            $(Score.current.scoreDiv!).hide()
         Score.current = this
-        $(this.div).show()
-        show("#scores")
+        $(this.scoreDiv).show()
     }
 }
 
@@ -204,14 +225,7 @@ function readScores(dn: string) {
     })
 
     fs.watch(dn, {}, (e, fn) => {
-        const path = dn + '/' + fn
-        let score = Score.byPath[path]
-        const current = score == Score.current
-        if (score)
-            score.remove()
         if ((<any>fn).endsWith('.pdf'))
-            score = new Score(dn, fn)
-        if (current)
-            score.show()
+            new Score(dn, fn)
     })
 }
