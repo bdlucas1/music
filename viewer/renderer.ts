@@ -31,7 +31,7 @@ class SortedArray<T> {
         this.compare = compare
     }
 
-    bs(e: T): number {
+    private bs(e: T): number {
         let low = 0
         let high = this.items.length - 1
         while (low <= high) {
@@ -139,6 +139,8 @@ class Score {
         }).catch((e) => {
             if (existing)
                 existing.remove()
+            if (Score.current == null)
+                showIfNeeded('#score-list')
         })
     }
 
@@ -151,14 +153,15 @@ class Score {
         const i = Score.sorted.insert(this)
         const table = $('#score-list-table')
         const trs = table.find('tr')
-        const before = trs[i]
+        // insert after assumes one row for table heading
+        const after = trs[i]
         const tr = $('<tr>')
             .attr('id', this.fn)
             .on('click', () => {
                 this.show()
                 show("#scores")
             })
-            .insertBefore(before)
+            .insertAfter(after)
         this.stateCell = $('<td>')
             .addClass('score-state')
             .appendTo(tr)[0]
@@ -174,7 +177,8 @@ class Score {
 
     remove() {
         const i = Score.sorted.remove(this)
-        $('#score-list-table').find('tr')[i].remove()
+        // +1 assumes one row for table heading
+        $('#score-list-table').find('tr')[i+1].remove()
         delete Score.byPath[this.path]
         if (Score.current == this)
             Score.current = null
@@ -217,14 +221,13 @@ class Score {
 function readScores(dn: string) {
 
     fs.readdir(dn, (err, items) => {
-        for (const fn of items) {
-            if ((<any>fn).endsWith('.pdf')) {
+        for (const fn of items)
+            if ((<any>fn).endsWith('.pdf'))
                 new Score(dn, fn)
-            }
-        }
     })
 
     fs.watch(dn, {}, (e, fn) => {
+        con.log('watch:', e, fn)
         if ((<any>fn).endsWith('.pdf'))
             new Score(dn, fn)
     })
