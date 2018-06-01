@@ -78,10 +78,14 @@ function showIfNeeded(what: '#score-list' | '#scores') {
 
 $(document).ready(() => {
 
-    //readScores('../scores-test')
-    readScores('../scores')
+    let dn = '../scores'
+    for (const arg of remote.process.argv) {
+        if (arg == '--test')
+            dn = '/tmp/scores'
+    }
+    con.log('reading', dn)
+    readScores(dn)
     remote.BrowserWindow.getAllWindows()[0].show()
-    //test()
 
     $('body').on('wheel', (e) => {
         const dx = e.originalEvent.deltaX

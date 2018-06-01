@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "prestart": "chmod u+w *.js; tsc *.ts || exit -1; chmod a-w *.js",
+      "test": "electron . --test",
     "start": "electron ."
   },
   "repository": "https://github.com/bdlucas1/music/viewer",
