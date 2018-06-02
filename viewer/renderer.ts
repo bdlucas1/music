@@ -15,7 +15,11 @@ import * as $ from 'jquery'
 import * as fs from 'fs'
 import {remote} from 'electron'
 
-const con = remote.getGlobal('console')
+const log = remote.getGlobal('console').log
+
+window.onerror = (error, url, line) => {
+    log(error, url, line)
+}
 
 // ts decls not good :(
 import {PDFJSStatic, PDFDocumentProxy} from 'pdfjs-dist'
@@ -81,11 +85,11 @@ $(document).ready(() => {
         if (arg == '--test')
             dn = '/tmp/scores'
     }
-    con.log('reading', dn)
+    log('reading', dn)
     readScores(dn)
     remote.BrowserWindow.getAllWindows()[0].show()
 
-    $('body').on('wheel', (e) => {
+    $('body').on('wheel', (e: any) => {
         const dx = e.originalEvent.deltaX
         const dy = e.originalEvent.deltaY
         if (Math.abs(dx) > 2 * Math.abs(dy))
@@ -99,11 +103,52 @@ $(document).ready(() => {
 })
 
 
-class Score {
+class ScoreTable {
 
-    static currentPath: string | null = null
+    static dot = '🔵'
+
     static sorted: SortedArray<Score> = new SortedArray((a, b) => a.compare(b))
     static byPath: {[fn: string]: Score} = {}
+
+    static add(score: Score) {
+        ScoreTable.byPath[score.path] = score
+        const i = ScoreTable.sorted.insert(score)
+        // insert after assumes one row for table heading
+        const after = $('#score-list-table').find('tr')[i]
+        const tr = $('<tr>')
+            .on('click', () => {
+                score.render()
+                $('#scores').find('div').hide()
+                $(score.div).show()
+                show("#scores")
+                tr.find('.score-state').text(ScoreTable.dot)
+            })
+            .insertAfter(after)
+        $('<td>')
+            .addClass('score-state')
+            .appendTo(tr)[0]
+        $('<td>')
+            .addClass('score-title')
+            .text(score.title)
+            .appendTo(tr)
+        $('<td>')
+            .addClass('score-author')
+            .text(score.author)
+            .appendTo(tr)
+    }
+
+    static remove(path: string) {
+        const score = ScoreTable.byPath[path]
+        if (score) {
+            const i = ScoreTable.sorted.remove(score)
+            // +1 assumes one row for table heading
+            if (i >= 0)
+                $('#score-list-table').find('tr')[i+1].remove()
+        }
+    }
+}
+
+class Score {
 
     fn: string
     path: string
@@ -113,119 +158,73 @@ class Score {
     title: string = ''
     key: string[] = []
 
-    scoreDiv: HTMLElement | null = null
-    stateCell: HTMLElement | null = null
+    div: HTMLElement
 
     constructor(dn: string, fn: string, show: boolean) {
 
         this.fn = fn
         this.path = dn + '/' + fn
 
-        const existing = Score.byPath[this.path]
-        const currentPath = Score.currentPath
+        // get or create our empty <div> container
+        const id = this.fn
+        const div = document.getElementById(id)
+        if (!div) {
+            this.div = $('<div>')
+                .attr('id', id)
+                .addClass('score')
+                .appendTo('#scores')
+                .hide()[0]
+        } else {
+            this.div = div
+            $(this.div).find('*').remove()
+        }
 
-        PDFJS.getDocument(this.path).then((pdf) => {
-            this.pdf = pdf
-            this.pdf.getMetadata().then((md) => {
-                this.title = md.info.Title || fn
-                this.author = md.info.Author || '\x7f' // no author sorts to end
-                this.key = [this.author.toLowerCase(), this.title.toLowerCase()]
-                if (existing)
-                    existing.remove()
-                this.add()
-                con.log('xxx good path', currentPath, this.path)
-                if (show || currentPath==this.path)
-                    this.show()
-            })
-        }).catch((e) => {
-            con.log('error reading', this.path)
-            con.log('xxx bad path', currentPath, this.path)
-            if (existing)
-                existing.remove()
-            if (show || currentPath==this.path)
-                this.show()
-        })
+        // open pdf, read metadata
+        PDFJS.getDocument(this.path).then(
+            (pdf) => {
+                this.pdf = pdf
+                this.pdf.getMetadata().then((md) => {
+                    this.title = md.info.Title || fn
+                    this.author = md.info.Author || '\x7f' // no author sorts to end
+                    this.key = [this.author.toLowerCase(), this.title.toLowerCase()]
+                    ScoreTable.remove(this.path);
+                    ScoreTable.add(this)
+                    if ($(this.div).is(':visible'))
+                    this.render()
+                })
+            },
+            (error) => {
+                ScoreTable.remove(this.path)
+            }
+        )
     }
 
     compare(that: Score): number {
         return this.key > that.key? 1 : this.key < that.key? -1 : 0
     }
 
-    add() {
-        Score.byPath[this.path] = this
-        const i = Score.sorted.insert(this)
-        const table = $('#score-list-table')
-        const trs = table.find('tr')
-        // insert after assumes one row for table heading
-        const after = trs[i]
-        const tr = $('<tr>')
-            .attr('id', this.fn)
-            .on('click', () => {
-                this.show()
-                show("#scores")
+    render() {
+        if (!this.pdf)
+            return
+        if ($(this.div).find('canvas').length)
+            return
+        log('rendering', this.path)
+        const canvas = <HTMLCanvasElement> $('<canvas>')
+            .addClass('score-canvas')
+            .appendTo(this.div)[0]
+        this.pdf.getPage(1).then((page) => {
+            const scale = 4 // optimal value??
+            const viewport = page.getViewport(scale)
+            canvas.width = viewport.width
+            canvas.height = viewport.height
+            //canvas.style.width = '100vw'
+            //canvas.style.height = (100 * canvas.height / canvas.width) + 'vw'
+            canvas.style.height = '160vh'
+            page.render({
+                canvasContext: canvas.getContext('2d')!,
+                viewport: viewport
             })
-            .insertAfter(after)
-        this.stateCell = $('<td>')
-            .addClass('score-state')
-            .appendTo(tr)[0]
-        $('<td>')
-            .addClass('score-title')
-            .text(this.title)
-            .appendTo(tr)
-        $('<td>')
-            .addClass('score-author')
-            .text(this.author)
-            .appendTo(tr)
-    }
-
-    remove() {
-        const i = Score.sorted.remove(this)
-        // +1 assumes one row for table heading
-        $('#score-list-table').find('tr')[i+1].remove()
-        delete Score.byPath[this.path]
-        if (this.scoreDiv)
-            $(this.scoreDiv).remove()
-    }
-
-    show() {
-        
-        // hide existing
-        const current = Score.byPath[Score.currentPath]
-        if (current)
-            $(current.scoreDiv!).hide()
-
-        // mark in table
-        const dot = '🔵'
-        $(this.stateCell!).text(dot)
-
-        // render if necessary
-        if (this.scoreDiv==null) {
-            this.scoreDiv = $('<div>')
-                .addClass('score')
-                .appendTo('#scores')[0]
-            const canvas = <HTMLCanvasElement> $('<canvas>')
-                .addClass('score-canvas')
-                .appendTo(this.scoreDiv)[0]
-            con.log('xxx show()', !!this.pdf)
-            if (this.pdf) this.pdf.getPage(1).then((page) => {
-                con.log('xxx rendering to canvas')
-                const scale = 4 // optimal value??
-                const viewport = page.getViewport(scale)
-                canvas.width = viewport.width
-                canvas.height = viewport.height
-                //canvas.style.width = '100vw'
-                //canvas.style.height = (100 * canvas.height / canvas.width) + 'vw'
-                canvas.style.height = '160vh'
-                page.render({
-                    canvasContext: canvas.getContext('2d')!,
-                    viewport: viewport
-                })
-            })
-        }
-
-        // show
-        Score.currentPath = this.path
-        $(this.scoreDiv).show()
+        })
     }
 }
 
@@ -239,7 +238,7 @@ function readScores(dn: string) {
 
     fs.watch(dn, {}, (e, fn) => {
         if ((<any>fn).endsWith('.pdf')) {
-            con.log('watch:', e, fn)
+            log('watch:', e, fn)
             new Score(dn, fn, true)
         }
     })
