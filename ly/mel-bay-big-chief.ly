@@ -1,12 +1,12 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Big Chief"
+  composer = "Mel Bay p. 13"
+}
 
-  \header {
-    piece = "Big Chief"
-    tag = "Mel Bay p. 13"
-  }
+\score {
 
   << \chords {
     d2.:min s a:7 s d:min \break

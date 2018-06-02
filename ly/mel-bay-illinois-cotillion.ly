@@ -1,12 +1,12 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Illinois Cotillion"
+  composer = "Mel Bay p. 15"
+}
 
-  \header {
-    piece = "Illinois Cotillion"
-    tag = "Mel Bay p. 15"
-  }
+\score {
 
   \transpose c c
   << \chords {

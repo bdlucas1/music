@@ -8,10 +8,10 @@
   markup-system-spacing #'basic-distance = 8\mm
   %page-count = #1
   tagline = ""
-  scoreTitleMarkup = \markup {
+  bookTitleMarkup = \markup {
     \column {
-      \fill-line {\null \bold \fontsize #4 \fromproperty #'header:piece \null}
-      \fill-line {\fromproperty #'header:key \null \fromproperty #'header:tag }
+      \fill-line {\null \bold \fontsize #4 \fromproperty #'header:title \null}
+      \fill-line {\fromproperty #'header:tag \null \fromproperty #'header:composer }
     }
   }
   %page-breaking = #ly:minimal-breaking

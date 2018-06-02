@@ -1,12 +1,12 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Yonder She Goes"
+  composer = "Mel Bay p. 4"
+}
 
-  \header {
-    piece = "Yonder She Goes"
-    tag = "Mel Bay p. 4"
-  }
+\score {
 
   \transpose c c
   << \chords {

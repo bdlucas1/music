@@ -1,12 +1,12 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Captain Jinks"
+  composer =  "Mel Bay p. 2"
+}
 
-  \header {
-    piece = "Captain Jinks"
-    tag =  "Mel Bay p. 2"
-  }
+\score {
 
   << \chords {
     s8 | d2. | s | a:7 | d | s | \break

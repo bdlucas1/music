@@ -1,13 +1,17 @@
 \version "2.18.2"
 \include "style.ily"
 
+\header {
+  title = "This Land Is Your Land"
+  composer = "Woodie Guthrie"
+}
+
 harmonies = \chordmode {
   \partial 2.
   s2. g1 s d s a s d s g s d s a s d
 }
 
 \score {
-  \header {piece = "This Land Is Your Land"}
   \transpose d d'' {
     <<
       \context ChordNames \harmonies

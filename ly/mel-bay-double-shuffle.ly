@@ -1,12 +1,12 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Double Shuffle"
+  composer = "Mel Bay p. 16"
+}
 
-  \header {
-    piece = "Double Shuffle"
-    tag = "Mel Bay p. 16"
-  }
+\score {
 
   << \chords {
     s8 | d4 g4 | d2 | a:7 | s | d4 g4 | \break

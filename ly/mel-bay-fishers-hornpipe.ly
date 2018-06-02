@@ -1,13 +1,13 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Fisher’s Hornpipe"
+  composer = "Mel Bay p. 14"
+  %key = "G Maj"
+}
 
-  \header {
-    piece = "Fisher's Hornpipe"
-    tag = "Mel Bay p. 14"
-    key = "G Maj"
-  }
+\score {
 
   \transpose f g''
   << \chords {

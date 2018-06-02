@@ -1,6 +1,11 @@
 \version "2.18.2"
 \include "style.ily"
 
+\header {
+  title = "Amazing Grace"
+  composer = "Traditional"
+}
+
 harmonies = \chordmode {
   \time 3/4 \key d \major {
     \partial 2. s4 | d2. | s | g | d | s | s | a |
@@ -9,7 +14,6 @@ harmonies = \chordmode {
 }
 
 \score {
-  \header {piece = "Amazing Grace"}
   \transpose g g' {
     <<
       \context ChordNames \harmonies

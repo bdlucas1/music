@@ -1,12 +1,13 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Home Waltz"
+  composer = "Mel Bay p. 24"
+}
 
-  \header {
-    piece = "Home Waltz"
-    tag = "Mel Bay p. 24"
-  }
+
+\score {
 
   << \chords {
     %chords

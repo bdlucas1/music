@@ -1,12 +1,13 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Happy Jack"
+  composer = "Mel Bay p. 18"
+}
 
-  \header {
-    piece = "Happy Jack"
-    tag = "Mel Bay p. 18"
-  }
+
+\score {
 
   \transpose c c
   << \chords {

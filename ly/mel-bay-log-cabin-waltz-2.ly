@@ -1,12 +1,12 @@
 \include "style.ily"
 \version "2.18.2"
 
-\score {
+\header {
+  title = "Log Cabin Waltz"
+  composer = "Mel Bay p. 19"
+}
 
-  \header {
-    piece = "Log Cabin Waltz"
-    tag = "Mel Bay p. 19"
-  }
+\score {
 
   \transpose c c
   << \chords {

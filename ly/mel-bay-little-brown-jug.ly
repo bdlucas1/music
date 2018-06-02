@@ -3,9 +3,7 @@
 
 \header {
   title = "Little Brown Jug Schottische"
-  %ubtitle = "Mel Bay p. 1"
-  tpag = "Mel Bay p. 1"
-  %composer = "Mel Bay"
+  composer = "Mel Bay p. 1"
 }
 
 \score {

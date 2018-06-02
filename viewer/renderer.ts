@@ -179,23 +179,32 @@ class Score {
             $(this.div).find('*').remove()
         }
 
+        // if anything goes wrong we remove ourselves from the score table
+        const error = (where: string, reason: string) => {
+            log('error', where, this.path)
+            log(reason)
+            ScoreTable.remove(this.path)        
+        }
+
         // open pdf, read metadata
         PDFJS.getDocument(this.path).then(
             (pdf) => {
                 this.pdf = pdf
-                this.pdf.getMetadata().then((md) => {
-                    this.title = md.info.Title || fn
-                    this.author = md.info.Author || '\x7f' // no author sorts to end
-                    this.key = [this.author.toLowerCase(), this.title.toLowerCase()]
-                    ScoreTable.remove(this.path);
-                    ScoreTable.add(this)
-                    if ($(this.div).is(':visible'))
-                    this.render()
-                })
+                this.pdf.getMetadata().then(
+                    (md) => {
+                        log('opened', this.path)
+                        this.title = md.info.Title || fn
+                        this.author = md.info.Author || '\x7f' // no author sorts to end
+                        this.key = [this.author.toLowerCase(), this.title.toLowerCase()]
+                        ScoreTable.remove(this.path);
+                        ScoreTable.add(this)
+                        if ($(this.div).is(':visible'))
+                            this.render()
+                    },
+                    (reason) => error('getting metadata', reason)
+                )
             },
-            (error) => {
-                ScoreTable.remove(this.path)
-            }
+            (reason) => error('reading', reason)
         )
     }
 
