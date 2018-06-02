@@ -3,6 +3,7 @@
 
 \header {
     title = "If I Had a Hammer"
+    composer = "Pete Seeger"
 }
 
 harmonies = \chordmode {

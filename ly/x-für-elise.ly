@@ -3,6 +3,7 @@
 
 \header {
     title = "Für Elise"
+    composer = "Ludwig van Beethoven"
 }
 
 
