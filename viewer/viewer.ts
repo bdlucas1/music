@@ -102,7 +102,6 @@ $(document).ready(() => {
                  
 })
 
-
 class ScoreTable {
 
     static dot = '🔵'
@@ -186,6 +185,12 @@ class Score {
             ScoreTable.remove(this.path)        
         }
 
+        // function to pad numbers with 0s so they sort in proper numeric order
+        const key = (s: string) => {
+            const zs = '0000000000'
+            return s.split(' ').map(w => isNaN(<any>w)? w : (zs+w).substring(w.length, zs.length+w.length)).join(' ').toLowerCase()
+        }
+
         // open pdf, read metadata
         PDFJS.getDocument(this.path).then(
             (pdf) => {
@@ -195,7 +200,7 @@ class Score {
                         log('opened', this.path)
                         this.title = md.info.Title || fn
                         this.author = md.info.Author || '\x7f' // no author sorts to end
-                        this.key = [this.author.toLowerCase(), this.title.toLowerCase()]
+                        this.key = [key(this.author), key(this.title)]
                         ScoreTable.remove(this.path);
                         ScoreTable.add(this)
                         if ($(this.div).is(':visible'))
