@@ -4,8 +4,8 @@
   "description": "PDF Music Score Viewer",
   "main": "main.js",
   "scripts": {
-    "pretest": "chmod u+w *.js; tsc *.ts || exit -1; chmod a-w *.js",
-    "prestart": "chmod u+w *.js; tsc *.ts || exit -1; chmod a-w *.js",
+    "pretest": "chmod u+w *.js; tsc --strict *.ts || exit -1; chmod a-w *.js",
+    "prestart": "chmod u+w *.js; tsc --strict *.ts || exit -1; chmod a-w *.js",
     "test": "electron . --test",
     "start": "electron ."
   },
@@ -19,6 +19,8 @@
   "author": "Bruce Lucas",
   "devDependencies": {},
   "dependencies": {
+    "@types/jquery": "^3.3.2",
+    "@types/pdfjs-dist": "^0.1.2",
     "electron": "^2.0.2",
     "jquery": "^3.3.1",
     "pdfjs-dist": "^2.0.489",
