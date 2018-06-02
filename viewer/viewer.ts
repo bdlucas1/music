@@ -228,7 +228,8 @@ class Score {
             canvas.height = viewport.height
             //canvas.style.width = '100vw'
             //canvas.style.height = (100 * canvas.height / canvas.width) + 'vw'
-            canvas.style.height = '160vh'
+            //canvas.style.width = '8.5in'
+            canvas.style.height = '180vh'
             page.render({
                 canvasContext: canvas.getContext('2d')!,
                 viewport: viewport

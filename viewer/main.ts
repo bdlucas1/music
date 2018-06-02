@@ -5,13 +5,13 @@ let win : BrowserWindow | null
 
 app.on('ready', () => {
     win = new BrowserWindow({
-        width: 1280,
-        height: 720,
+        width: 1024,
+        height: 640,
         show: false
         //webPreferences: {plugins: true}
     })
 
-    win.loadFile('index.html')
+    win.loadFile('viewer.html')
 
     win.on('closed', function () {
         win = null
