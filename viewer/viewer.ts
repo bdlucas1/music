@@ -1,16 +1,3 @@
-/*
-next:
-skin table
-add "open" column
-get title etc. from pdf; alphabetize
-highlight current score
-arrow keys to navigate
-    l/r in scores view to circulate
-    u/d in score-list view to select, enter to open
-remove horizontal scrollbar
-*/
-
-
 import * as $ from 'jquery'
 import * as fs from 'fs'
 import {remote} from 'electron'
@@ -107,7 +94,7 @@ class ScoreTable {
     static dot = '🔵'
 
     static sorted: SortedArray<Score> = new SortedArray((a, b) => a.compare(b))
-    static byPath: {[fn: string]: Score} = {}
+    static byPath: {[path: string]: Score} = {}
 
     static add(score: Score) {
         ScoreTable.byPath[score.path] = score
@@ -149,7 +136,6 @@ class ScoreTable {
 
 class Score {
 
-    fn: string
     path: string
 
     pdf: PDFDocumentProxy | null = null
@@ -159,13 +145,12 @@ class Score {
 
     div: HTMLElement
 
-    constructor(dn: string, fn: string, show: boolean) {
+    constructor(dn: string, fn: string) {
 
-        this.fn = fn
         this.path = dn + '/' + fn
 
         // get or create our empty <div> container
-        const id = this.fn
+        const id = this.path
         const div = document.getElementById(id)
         if (!div) {
             this.div = $('<div>')
@@ -250,13 +235,13 @@ function readScores(dn: string) {
     fs.readdir(dn, (err, items) => {
         for (const fn of items)
             if ((<any>fn).endsWith('.pdf'))
-                new Score(dn, fn, false)
+                new Score(dn, fn)
     })
 
     fs.watch(dn, {}, (e, fn) => {
         if ((<any>fn).endsWith('.pdf')) {
             log('watch:', e, fn)
-            new Score(dn, fn, true)
+            new Score(dn, fn)
         }
     })
 }
