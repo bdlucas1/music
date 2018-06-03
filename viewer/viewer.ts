@@ -55,11 +55,15 @@ class SortedArray<T> {
 
 let showing: HTMLElement
 
+function elt(e: HTMLElement | null) {
+    return e? e.tagName+':'+e.id : 'null'
+}
+
 function show(what: HTMLElement) {
     if (showing != what) {
-        log('show', what instanceof HTMLElement? what.tagName+':'+what.id : what)
+        log('show', elt(what))
         showing = what
-        $(showing)[0].scrollIntoView({behavior: 'smooth'})
+        showing.scrollIntoView({behavior: 'smooth'})
     }
 }
 
@@ -73,6 +77,11 @@ $(document).ready(() => {
     log('reading', dn)
     readScores(dn)
     remote.BrowserWindow.getAllWindows()[0].show()
+
+    //
+    // wheel events move between scores
+    // works well with 2-finger scroll on osx
+    // 
 
     let lastWheel = 0
     $('body').on('wheel', (e: any) => {
@@ -90,6 +99,36 @@ $(document).ready(() => {
         }
     })
 
+    //
+    // drag gesture swaps between score list and current showing score
+    // works well with 3-finger drag on osx
+    //
+
+    let lastShowing: HTMLElement | null
+    let mouseMovement = 0
+
+    $('body').on('mousemove', (e: any) => {
+        if (e.buttons) {
+            mouseMovement = e.originalEvent.movementX
+            const scoreList = document.getElementById('score-list')!
+            if (mouseMovement > 0 && showing != scoreList) {
+                lastShowing = showing
+                show(scoreList)
+                log('lastShowing now', elt(lastShowing))
+            } else if (mouseMovement < 0 && showing == scoreList && lastShowing) {
+                log('lastShowing', elt(lastShowing))
+                show(lastShowing)
+            }
+        }
+    })
+
+    // capture click if it resulted from a drag gesture
+    $('body')[0].addEventListener('click', (e) => {
+        if (mouseMovement)
+            e.preventDefault()
+        mouseMovement = 0
+    }, true)
+
     $(window).on('resize', () => {
         $(showing)[0].scrollIntoView({})
     })
@@ -98,7 +137,8 @@ $(document).ready(() => {
 
 class ScoreTable {
 
-    static dot = '🔵'
+    static mark = '🔵'
+    //static mark = '❌'
 
     static sorted: SortedArray<Score> = new SortedArray((a, b) => {
         return a.key > b.key? 1 : a.key < b.key? -1 : 0
@@ -115,7 +155,7 @@ class ScoreTable {
                 score.render()
                 $(score.div!).show()
                 show(score.div!)
-                tr.find('.score-state').text(ScoreTable.dot)
+                tr.find('.score-state').text(ScoreTable.mark)
             })
             .insertAfter(after)
         $('<td>')
