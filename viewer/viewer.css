@@ -4,11 +4,12 @@ body {
 }
 
 #top {
-    width: 200vw;
+    width: 1000000vw; /* ??? */
     height: 100vh;
     display: flex;
     flex-direction: row;
     overflow-y: hidden;
+    overflow-x: hidden;
 }
 
 #score-list {
@@ -37,16 +38,10 @@ body {
     padding-left: 2em;
 }
 
-/* container for all scores */
-#scores {
-    width: 100vw;
-    height: 100vh;
-}
-
 /* each score has its own container to maintain separate scroll position */
 .score {
-    width: 100%;
-    height: 100%; 
+    width: 100vw;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     overflow-y: scroll;

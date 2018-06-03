@@ -53,16 +53,14 @@ class SortedArray<T> {
     }
 }
 
-let showing: '#score-list' | '#scores' = '#score-list'
+let showing: HTMLElement
 
-function show(what: '#score-list' | '#scores') {
-    showing = what
-    $(showing)[0].scrollIntoView({behavior: 'smooth'})
-}
-
-function showIfNeeded(what: '#score-list' | '#scores') {
-    if (showing != what)
-        show(what)
+function show(what: HTMLElement) {
+    if (showing != what) {
+        log('show', what instanceof HTMLElement? what.tagName+':'+what.id : what)
+        showing = what
+        $(showing)[0].scrollIntoView({behavior: 'smooth'})
+    }
 }
 
 $(document).ready(() => {
@@ -76,11 +74,20 @@ $(document).ready(() => {
     readScores(dn)
     remote.BrowserWindow.getAllWindows()[0].show()
 
+    let lastWheel = 0
     $('body').on('wheel', (e: any) => {
         const dx = e.originalEvent.deltaX
         const dy = e.originalEvent.deltaY
-        if (Math.abs(dx) > 2 * Math.abs(dy))
-            showIfNeeded(dx > 0? '#scores' : '#score-list')
+        if (Math.abs(dx) > 2 * Math.abs(dy)) {
+            const dt = e.timeStamp - lastWheel
+            lastWheel = e.timeStamp
+            if (dt < 40)
+                return
+            const visible = $('.score, #score-list').filter(':visible')
+            const i = visible.index(showing) + (dx > 0? 1 : -1)
+            if (i >= 0 && i < visible.length)
+                show(visible[i])
+        }
     })
 
     $(window).on('resize', () => {
@@ -104,9 +111,8 @@ class ScoreTable {
         const tr = $('<tr>')
             .on('click', () => {
                 score.render()
-                $('#scores').find('div').hide()
                 $(score.div).show()
-                show("#scores")
+                show(score.div)
                 tr.find('.score-state').text(ScoreTable.dot)
             })
             .insertAfter(after)
@@ -136,7 +142,10 @@ class ScoreTable {
 
 class Score {
 
+    static ids = 0
+
     path: string
+    id: string
 
     pdf: PDFDocumentProxy | null = null
     author: string = ''
@@ -148,15 +157,15 @@ class Score {
     constructor(dn: string, fn: string) {
 
         this.path = dn + '/' + fn
+        this.id = 'score-' + (Score.ids++)
 
         // get or create our empty <div> container
-        const id = this.path
-        const div = document.getElementById(id)
+        const div = document.getElementById(this.id)
         if (!div) {
             this.div = $('<div>')
-                .attr('id', id)
+                .attr('id', this.id)
                 .addClass('score')
-                .appendTo('#scores')
+                .appendTo('#top')
                 .hide()[0]
         } else {
             this.div = div
