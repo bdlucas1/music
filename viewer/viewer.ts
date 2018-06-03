@@ -145,10 +145,14 @@ class ScoreTable {
     static byPath: {[path: string]: Score} = {}
 
     static close(score: Score) {
-        const visible = $('.score, #score-list').filter(':visible')
-        const i = visible.index(score.div!)
-        if (i == visible.length - 1)
-            show(visible[i-1])
+        if (showing == score.div) {
+            const visible = $('.score, #score-list').filter(':visible')
+            const i = visible.index(score.div!)
+            if (i == visible.length - 1)
+                show(visible[i-1])
+            else
+                showing = visible[i+1]
+        }
         //score.unrender() ???
         $(score.div!).hide()
         $(score.stateCell!).text('')
