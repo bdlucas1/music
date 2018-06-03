@@ -48,3 +48,12 @@ body {
     overflow-x: hidden;
     align-items: center;
 }
+
+.score-closer {
+    height: 0em;
+    align-self: flex-start;
+    margin-left: 0.8em;
+    margin-top: 0.7em;
+    user-select: none;
+    cursor: default;
+}

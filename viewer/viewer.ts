@@ -137,13 +137,29 @@ $(document).ready(() => {
 
 class ScoreTable {
 
-    static mark = '🔵'
-    //static mark = '❌'
+    static closer = '❌'
 
     static sorted: SortedArray<Score> = new SortedArray((a, b) => {
         return a.key > b.key? 1 : a.key < b.key? -1 : 0
     })
     static byPath: {[path: string]: Score} = {}
+
+    static close(score: Score) {
+        const visible = $('.score, #score-list').filter(':visible')
+        const i = visible.index(score.div!)
+        if (i == visible.length - 1)
+            show(visible[i-1])
+        //score.unrender() ???
+        $(score.div!).hide()
+        $(score.stateCell!).text('')
+        
+    }
+    
+    static open(score: Score) {
+        score.render()
+        $(score.div!).show()
+        $(score.stateCell!).text(ScoreTable.closer)
+    }
 
     static add(score: Score): number {
         ScoreTable.byPath[score.path] = score
@@ -151,14 +167,21 @@ class ScoreTable {
         // insert after assumes one row for table heading
         const after = $('#score-list-table').find('tr')[i]
         const tr = $('<tr>')
-            .on('click', () => {
-                score.render()
-                $(score.div!).show()
-                show(score.div!)
-                tr.find('.score-state').text(ScoreTable.mark)
+            .on('click', (e) => {
+                log('click', elt(e.target), elt(e.currentTarget))
+                if (e.target == score.stateCell) {
+                    if ($(e.target).text() == ScoreTable.closer) {
+                        ScoreTable.close(score)
+                    } else {
+                        ScoreTable.open(score)
+                    }
+                } else {
+                    ScoreTable.open(score)
+                    show(score.div!)
+                }
             })
             .insertAfter(after)
-        $('<td>')
+        score.stateCell = $('<td>')
             .addClass('score-state')
             .appendTo(tr)[0]
         $('<td>')
@@ -190,6 +213,7 @@ class Score {
     path: string
     id: string
     div: HTMLElement | null = null
+    stateCell: HTMLElement | null = null
 
     pdf: PDFDocumentProxy | null = null
     author: string = ''
@@ -245,6 +269,12 @@ class Score {
                                 .attr('id', this.id)
                                 .addClass('score')
                                 .hide()[0]
+                            $('<div>')
+                                .addClass('score-state')
+                                .addClass('score-closer')
+                                .text(ScoreTable.closer)
+                                .on('click', () => ScoreTable.close(this))
+                                .appendTo(this.div)
                             const scores = $('.score')
                             if (i >= scores.length)
                                 $(this.div).appendTo('#top')

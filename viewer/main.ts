@@ -4,11 +4,11 @@ import {app, BrowserWindow} from 'electron'
 let win : BrowserWindow | null
 
 app.on('ready', () => {
+
     win = new BrowserWindow({
         width: 1024,
         height: 640,
         show: false
-        //webPreferences: {plugins: true}
     })
 
     win.loadFile('viewer.html')
