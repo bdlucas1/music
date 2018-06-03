@@ -197,7 +197,7 @@ class Score {
                 this.pdf = pdf
                 this.pdf.getMetadata().then(
                     (md) => {
-                        log('opened', this.path)
+                        log('opened', this.path, pdf.numPages, 'pages')
                         this.title = md.info.Title || fn
                         this.author = md.info.Author || '\x7f' // no author sorts to end
                         this.key = [key(this.author), key(this.title)]
@@ -222,24 +222,26 @@ class Score {
             return
         if ($(this.div).find('canvas').length)
             return
-        log('rendering', this.path)
-        const canvas = <HTMLCanvasElement> $('<canvas>')
-            .addClass('score-canvas')
-            .appendTo(this.div)[0]
-        this.pdf.getPage(1).then((page) => {
-            const scale = 4 // optimal value??
-            const viewport = page.getViewport(scale)
-            canvas.width = viewport.width
-            canvas.height = viewport.height
-            //canvas.style.width = '100vw'
-            //canvas.style.height = (100 * canvas.height / canvas.width) + 'vw'
-            //canvas.style.width = '8.5in'
-            canvas.style.height = '180vh'
-            page.render({
-                canvasContext: canvas.getContext('2d')!,
-                viewport: viewport
+        for (let i = 1; i <= this.pdf.numPages; i++) {
+            log('rendering', this.path, 'page', i)
+            const canvas = <HTMLCanvasElement> $('<canvas>')
+                .addClass('score-canvas')
+                .appendTo(this.div)[0]
+            this.pdf.getPage(i).then((page) => {
+                const scale = 4 // optimal value??
+                const viewport = page.getViewport(scale)
+                canvas.width = viewport.width
+                canvas.height = viewport.height
+                //canvas.style.width = '100vw'
+                //canvas.style.height = (100 * canvas.height / canvas.width) + 'vw'
+                //canvas.style.width = '8.5in'
+                canvas.style.height = '180vh'
+                page.render({
+                    canvasContext: canvas.getContext('2d')!,
+                    viewport: viewport
+                })
             })
-        })
+        }
     }
 }
 
