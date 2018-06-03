@@ -100,10 +100,12 @@ class ScoreTable {
 
     static dot = '🔵'
 
-    static sorted: SortedArray<Score> = new SortedArray((a, b) => a.compare(b))
+    static sorted: SortedArray<Score> = new SortedArray((a, b) => {
+        return a.key > b.key? 1 : a.key < b.key? -1 : 0
+    })
     static byPath: {[path: string]: Score} = {}
 
-    static add(score: Score) {
+    static add(score: Score): number {
         ScoreTable.byPath[score.path] = score
         const i = ScoreTable.sorted.insert(score)
         // insert after assumes one row for table heading
@@ -111,8 +113,8 @@ class ScoreTable {
         const tr = $('<tr>')
             .on('click', () => {
                 score.render()
-                $(score.div).show()
-                show(score.div)
+                $(score.div!).show()
+                show(score.div!)
                 tr.find('.score-state').text(ScoreTable.dot)
             })
             .insertAfter(after)
@@ -127,6 +129,7 @@ class ScoreTable {
             .addClass('score-author')
             .text(score.author)
             .appendTo(tr)
+        return i
     }
 
     static remove(path: string) {
@@ -146,31 +149,17 @@ class Score {
 
     path: string
     id: string
+    div: HTMLElement | null = null
 
     pdf: PDFDocumentProxy | null = null
     author: string = ''
     title: string = ''
     key: string[] = []
 
-    div: HTMLElement
-
     constructor(dn: string, fn: string) {
 
         this.path = dn + '/' + fn
         this.id = 'score-' + (Score.ids++)
-
-        // get or create our empty <div> container
-        const div = document.getElementById(this.id)
-        if (!div) {
-            this.div = $('<div>')
-                .attr('id', this.id)
-                .addClass('score')
-                .appendTo('#top')
-                .hide()[0]
-        } else {
-            this.div = div
-            $(this.div).find('*').remove()
-        }
 
         // if anything goes wrong we remove ourselves from the score table
         const error = (where: string, reason: string) => {
@@ -185,42 +174,82 @@ class Score {
             return s.split(' ').map(w => isNaN(<any>w)? w : (zs+w).substring(w.length, zs.length+w.length)).join(' ').toLowerCase()
         }
 
-        // open pdf, read metadata
+        // read pdf file
         PDFJS.getDocument(this.path).then(
+
+            // success reading file
             (pdf) => {
+
+                // get metadata
                 this.pdf = pdf
                 this.pdf.getMetadata().then(
+
+                    // success getting metadata
                     (md) => {
+
+                        // get metadata, compute key
                         log('opened', this.path, pdf.numPages, 'pages')
                         this.title = md.info.Title || fn
                         this.author = md.info.Author || '\x7f' // no author sorts to end
                         this.key = [key(this.author), key(this.title)]
+                        
+                        // add to score table, getting sort order i
                         ScoreTable.remove(this.path);
-                        ScoreTable.add(this)
+                        const i = ScoreTable.add(this)
+                        
+                        // get or construct empty div for our canvases
+                        const div = document.getElementById(this.id)
+                        if (!div) {
+                            // create new div, insert in correct order, start hidden
+                            this.div = $('<div>')
+                                .attr('id', this.id)
+                                .addClass('score')
+                                .hide()[0]
+                            const scores = $('.score')
+                            if (i >= scores.length)
+                                $(this.div).appendTo('#top')
+                            else
+                                $(this.div).insertBefore(scores[i])
+                        } else {
+                            // use existing div, empty it
+                            this.div = div
+                            $(this.div).find('*').remove()
+                        }
+
+                        // render score if it was an existing visible div
                         if ($(this.div).is(':visible'))
                             this.render()
                     },
+
+                    // error getting metadata
                     (reason) => error('getting metadata', reason)
                 )
             },
+
+            // error reading page
             (reason) => error('reading', reason)
         )
     }
 
-    compare(that: Score): number {
-        return this.key > that.key? 1 : this.key < that.key? -1 : 0
-    }
-
     render() {
+
+        // nothing to render
         if (!this.pdf)
             return
-        if ($(this.div).find('canvas').length)
+
+        // already rendered
+        if ($(this.div!).find('canvas').length)
             return
+
+        //for each page
         for (let i = 1; i <= this.pdf.numPages; i++) {
-            log('rendering', this.path, 'page', i)
+
+            // create a canvas, add to our div
             const canvas = <HTMLCanvasElement> $('<canvas>')
                 .addClass('score-canvas')
-                .appendTo(this.div)[0]
+                .appendTo(this.div!)[0]
+
+            // render page i into the canvas
             this.pdf.getPage(i).then((page) => {
                 const scale = 4 // optimal value??
                 const viewport = page.getViewport(scale)
@@ -241,12 +270,14 @@ class Score {
 
 function readScores(dn: string) {
 
+    // populate with files
     fs.readdir(dn, (err, items) => {
         for (const fn of items)
             if ((<any>fn).endsWith('.pdf'))
                 new Score(dn, fn)
     })
 
+    // watch for changes
     fs.watch(dn, {}, (e, fn) => {
         if ((<any>fn).endsWith('.pdf')) {
             log('watch:', e, fn)
