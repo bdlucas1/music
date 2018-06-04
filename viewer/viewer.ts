@@ -67,12 +67,16 @@ class State {
         const state = {
             open: State.open
         }
-        fs.writeFileSync(State.fn, JSON.stringify(state))
+        fs.writeFileSync(State.fn, JSON.stringify(state, null, 2))
     }
 
     static restore() {
-        const state = JSON.parse(fs.readFileSync(State.fn).toString())
-        State.open = state.open
+        try {
+            const state = JSON.parse(fs.readFileSync(State.fn).toString())
+            State.open = state.open
+        } catch (e) {
+            log(e)
+        }
     }
 
     static addOpen(path: string) {
