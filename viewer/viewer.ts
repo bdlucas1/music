@@ -325,14 +325,12 @@ class Score {
 
             // render page i into the canvas
             this.pdf.getPage(i).then((page) => {
-                const scale = 4 // optimal value??
-                const viewport = page.getViewport(scale)
+                const ppi = 227                             // physical display ppi; macbook 13.3" retina
+                const viewport = page.getViewport(ppi / 72) // output one pixel per screen pixel
                 canvas.width = viewport.width
                 canvas.height = viewport.height
-                //canvas.style.width = '100vw'
-                //canvas.style.height = (100 * canvas.height / canvas.width) + 'vw'
-                //canvas.style.width = '8.5in'
-                canvas.style.height = '180vh'
+                canvas.style.width =                        // display at correct size when window is full-screen
+                    (viewport.width / (screen.width * window.devicePixelRatio) * 100) + 'vw'
                 page.render({
                     canvasContext: canvas.getContext('2d')!,
                     viewport: viewport
