@@ -53,6 +53,39 @@ class SortedArray<T> {
     }
 }
 
+//
+// state to save and restore on startupa
+//
+
+class State {
+
+    static open: {[path: string]: boolean} = {}
+
+    private static fn = process.env.HOME + '/.viewer'
+
+    static save() {
+        const state = {
+            open: State.open
+        }
+        fs.writeFileSync(State.fn, JSON.stringify(state))
+    }
+
+    static restore() {
+        const state = JSON.parse(fs.readFileSync(State.fn).toString())
+        State.open = state.open
+    }
+
+    static addOpen(path: string) {
+        State.open[path] = true
+        State.save()
+    }
+
+    static removeOpen(path: string) {
+        delete State.open[path]
+        State.save()
+    }
+}
+
 let showing: HTMLElement
 
 function elt(e: HTMLElement | null) {
@@ -74,6 +107,7 @@ $(document).ready(() => {
         if (arg == '--test')
             dn = '/tmp/scores'
     }
+    State.restore()
     log('reading', dn)
     readScores(dn)
     remote.BrowserWindow.getAllWindows()[0].show()
@@ -156,13 +190,14 @@ class ScoreTable {
         //score.unrender() ???
         $(score.div!).hide()
         $(score.stateCell!).text('')
-        
+        State.removeOpen(score.path)
     }
     
     static open(score: Score) {
         score.render()
         $(score.div!).show()
         $(score.stateCell!).text(ScoreTable.closer)
+        State.addOpen(score.path)
     }
 
     static add(score: Score): number {
@@ -224,7 +259,7 @@ class Score {
     title: string = ''
     key: string[] = []
 
-    constructor(dn: string, fn: string) {
+    constructor(dn: string, fn: string, ready?: (score: Score) => void) {
 
         this.path = dn + '/' + fn
         this.id = 'score-' + (Score.ids++)
@@ -293,6 +328,10 @@ class Score {
                         // render score if it was an existing visible div
                         if ($(this.div).is(':visible'))
                             this.render()
+
+                        // callback when ready
+                        if (ready)
+                            ready(this)
                     },
 
                     // error getting metadata
@@ -344,9 +383,14 @@ function readScores(dn: string) {
 
     // populate with files
     fs.readdir(dn, (err, items) => {
-        for (const fn of items)
-            if ((<any>fn).endsWith('.pdf'))
-                new Score(dn, fn)
+        for (const fn of items) {
+            if ((<any>fn).endsWith('.pdf')) {
+                new Score(dn, fn, (score) => {
+                    if (State.open[score.path])
+                        ScoreTable.open(score)
+                })
+            }
+        }
     })
 
     // watch for changes
