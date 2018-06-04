@@ -16,6 +16,7 @@ app.on('ready', () => {
     win.on('closed', function () {
         win = null
     })
+
 })
 
 // Quit when all windows are closed.

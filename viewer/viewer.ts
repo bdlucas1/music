@@ -54,41 +54,104 @@ class SortedArray<T> {
 }
 
 //
-// state to save and restore on startupa
+// manage persistent state
 //
+
+type Save = {
+    ppi: number,
+    scores: {
+        [path: string]: {
+            open: boolean,
+            scrollTop: number
+        }
+    }
+}
 
 class State {
 
-    static open: {[path: string]: boolean} = {}
+    static byPath: {[path: string]: Score} = {}
 
-    private static fn = process.env.HOME + '/.viewer'
-
-    static save() {
-        const state = {
-            open: State.open
+    static state: {
+        ppi: number,
+        scores: {
+            [path: string]: {
+                open: boolean,
+                scrollTop: number
+            }
         }
-        fs.writeFileSync(State.fn, JSON.stringify(state, null, 2))
+    } = {
+        ppi: 96, // default is nominal css pixels
+        scores: {}
     }
 
-    static restore() {
+    private static fn = process.env.HOME + '/.viewer';
+    private static pendingStart = 0
+    private static interval = 1000; // ms
+
+    static init(dn: string) {
+
+        // load saved state
         try {
-            const state = JSON.parse(fs.readFileSync(State.fn).toString())
-            State.open = state.open
+            log('loading', State.fn)
+            State.state = JSON.parse(fs.readFileSync(State.fn).toString())
         } catch (e) {
-            log(e)
+            log(State.fn + ':' + e)
         }
+
+        // populate with files, initializing each score to saved state
+        log('reading', dn)
+        fs.readdir(dn, (err, items) => {
+            for (const fn of items) {
+                if ((<any>fn).endsWith('.pdf')) {
+                    State.pendingStart++
+                    new Score(dn, fn, (score: Score) => {
+                        const scoreState = State.state.scores[score.path]
+                        if (scoreState) {
+                            if (scoreState.open)
+                                ScoreTable.open(score)
+                            setTimeout(() => {score.div!.scrollTop = scoreState.scrollTop}, 100) 
+                        }
+                        State.pendingStart--
+                    })
+                }
+            }
+            State.go()
+        })
+
+        // watch for changes
+        fs.watch(dn, {}, (e, fn) => {
+            if ((<any>fn).endsWith('.pdf')) {
+                log('watch:', e, fn)
+                new Score(dn, fn)
+            }
+        })
     }
 
-    static addOpen(path: string) {
-        State.open[path] = true
-        State.save()
-    }
-
-    static removeOpen(path: string) {
-        delete State.open[path]
-        State.save()
+    private static go() {
+        if (State.pendingStart) {
+            log('pendingStart', State.pendingStart)
+        } else {
+            State.state.scores = {}
+            for (const path in State.byPath) {
+                const score = State.byPath[path]
+                State.state.scores[path] = {
+                    open: $(score.div!).is(':visible'),
+                    scrollTop: score.div!.scrollTop
+                }
+                try {
+                    fs.writeFileSync(State.fn, JSON.stringify(State.state, null, 2))
+                } catch (e) {
+                    log(State.fn + ':' + e)
+                }
+            }
+        }
+        setTimeout(State.go, State.interval)
     }
 }
+
+//
+// ephemeral state
+//
 
 let showing: HTMLElement
 
@@ -111,9 +174,7 @@ $(document).ready(() => {
         if (arg == '--test')
             dn = '/tmp/scores'
     }
-    State.restore()
-    log('reading', dn)
-    readScores(dn)
+    State.init(dn)
     remote.BrowserWindow.getAllWindows()[0].show()
 
     //
@@ -180,7 +241,6 @@ class ScoreTable {
     static sorted: SortedArray<Score> = new SortedArray((a, b) => {
         return a.key > b.key? 1 : a.key < b.key? -1 : 0
     })
-    static byPath: {[path: string]: Score} = {}
 
     static close(score: Score) {
         if (showing == score.div) {
@@ -194,18 +254,16 @@ class ScoreTable {
         //score.unrender() ???
         $(score.div!).hide()
         $(score.stateCell!).text('')
-        State.removeOpen(score.path)
     }
     
     static open(score: Score) {
         score.render()
         $(score.div!).show()
         $(score.stateCell!).text(ScoreTable.closer)
-        State.addOpen(score.path)
     }
 
     static add(score: Score): number {
-        ScoreTable.byPath[score.path] = score
+        State.byPath[score.path] = score
         const i = ScoreTable.sorted.insert(score)
         // insert after assumes one row for table heading
         const after = $('#score-list-table').find('tr')[i]
@@ -239,12 +297,13 @@ class ScoreTable {
     }
 
     static remove(path: string) {
-        const score = ScoreTable.byPath[path]
+        const score = State.byPath[path]
         if (score) {
             const i = ScoreTable.sorted.remove(score)
             // +1 assumes one row for table heading
             if (i >= 0)
                 $('#score-list-table').find('tr')[i+1].remove()
+            delete State.byPath[path]
         }
     }
 }
@@ -368,12 +427,11 @@ class Score {
 
             // render page i into the canvas
             this.pdf.getPage(i).then((page) => {
-                const ppi = 227                             // physical display ppi; macbook 13.3" retina
-                const viewport = page.getViewport(ppi / 72) // output one pixel per screen pixel
+                const viewport = page.getViewport(State.state.ppi * window.devicePixelRatio / 72)
                 canvas.width = viewport.width
                 canvas.height = viewport.height
-                canvas.style.width =                        // display at correct size when window is full-screen
-                    (viewport.width / (screen.width * window.devicePixelRatio) * 100) + 'vw'
+                const screenWidth = screen.width * window.devicePixelRatio
+                canvas.style.width = (viewport.width / screenWidth * 100) + 'vw'
                 page.render({
                     canvasContext: canvas.getContext('2d')!,
                     viewport: viewport
@@ -383,25 +441,3 @@ class Score {
     }
 }
 
-function readScores(dn: string) {
-
-    // populate with files
-    fs.readdir(dn, (err, items) => {
-        for (const fn of items) {
-            if ((<any>fn).endsWith('.pdf')) {
-                new Score(dn, fn, (score) => {
-                    if (State.open[score.path])
-                        ScoreTable.open(score)
-                })
-            }
-        }
-    })
-
-    // watch for changes
-    fs.watch(dn, {}, (e, fn) => {
-        if ((<any>fn).endsWith('.pdf')) {
-            log('watch:', e, fn)
-            new Score(dn, fn)
-        }
-    })
-}
