@@ -6,6 +6,7 @@ PDFS=$(LYS:%.ly=$(DEST)/%.pdf)
 
 $(DEST)/%.pdf: %.ly
 	$(LILYPOND) -o $(DEST)/$* $<
+	mv $(DEST)/$*.midi ../midi || echo np
 
 all: $(PDFS)
 
