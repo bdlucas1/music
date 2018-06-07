@@ -5,9 +5,7 @@
   ragged-bottom = ##t
   ragged-right = ##f
   ragged-last = ##f
-  markup-system-spacing #'basic-distance = 8\mm
   %page-count = #1
-  tagline = ""
   bookTitleMarkup = \markup {
     \column {
       \fill-line {\null \bold \fontsize #4 \fromproperty #'header:title \null}
