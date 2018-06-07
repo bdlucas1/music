@@ -1,5 +1,7 @@
 import * as $ from 'jquery'
+import * as assert from 'assert'
 import * as fs from 'fs'
+import * as path from 'path'
 import {remote} from 'electron'
 
 const log = remote.getGlobal('console').log
@@ -22,7 +24,7 @@ class SortedArray<T> {
         this.compare = compare
     }
 
-    private bs(e: T): number {
+    find(e: T): number {
         let low = 0
         let high = this.items.length - 1
         while (low <= high) {
@@ -39,14 +41,14 @@ class SortedArray<T> {
     }
 
     insert(e: T): number {
-        let i = this.bs(e)
+        let i = this.find(e)
         if (i < 0) i = -i - 1
         this.items.splice(i, 0, e)
         return i
     }
     
     remove(e: T): number {
-        let i = this.bs(e)
+        let i = this.find(e)
         if (i >= 0)
             this.items.splice(i, 1)
         return i
@@ -104,7 +106,7 @@ class State {
             for (const fn of items) {
                 if ((<any>fn).endsWith('.pdf')) {
                     State.pendingStart++
-                    new Score(dn, fn, (score: Score) => {
+                    new Score(path.join(dn, fn), fn, (score: Score) => {
                         const scoreState = State.state.scores[score.path]
                         if (scoreState) {
                             if (scoreState.open)
@@ -122,7 +124,12 @@ class State {
         fs.watch(dn, {}, (e, fn) => {
             if ((<any>fn).endsWith('.pdf')) {
                 log('watch:', e, fn)
-                new Score(dn, fn)
+                const p = path.join(dn, fn)
+                const score = State.byPath[p]
+                if (score)
+                    score.read()
+                else
+                    new Score(p, fn)
             }
         })
     }
@@ -234,13 +241,13 @@ $(document).ready(() => {
                  
 })
 
+type Key = string[]
+
 class ScoreTable {
 
     static closer = '❌'
 
-    static sorted: SortedArray<Score> = new SortedArray((a, b) => {
-        return a.key > b.key? 1 : a.key < b.key? -1 : 0
-    })
+    static sorted: SortedArray<Key> = new SortedArray((a, b) => a > b? 1 : a < b? -1 : 0)
 
     static close(score: Score) {
         if (showing == score.div) {
@@ -262,48 +269,64 @@ class ScoreTable {
         $(score.stateCell!).text(ScoreTable.closer)
     }
 
-    static add(score: Score): number {
-        State.byPath[score.path] = score
-        const i = ScoreTable.sorted.insert(score)
-        // insert after assumes one row for table heading
-        const after = $('#score-list-table').find('tr')[i]
-        const tr = $('<tr>')
-            .on('click', (e) => {
-                log('click', elt(e.target), elt(e.currentTarget))
-                if (e.target == score.stateCell) {
-                    if ($(e.target).text() == ScoreTable.closer) {
-                        ScoreTable.close(score)
-                    } else {
-                        ScoreTable.open(score)
-                    }
+    static add(score: Score, oldKey: Key | null): number {
+
+        let tr: HTMLElement
+
+        if (oldKey) {
+            const i = ScoreTable.sorted.remove(oldKey)
+            assert.ok(i >= 0, 'key not found in ScoreTable.sorted')
+            // +1 assumes one row for table heading
+            tr = $('#score-list-table').find('tr')[i+1]
+            $(tr).remove()
+            assert.ok(State.byPath[score.path]==score, 'score not found in State.byPath')
+        } else {
+            State.byPath[score.path] = score
+            tr = $('<tr>')[0]
+            score.stateCell = $('<td>')
+                .addClass('score-state')
+                .appendTo(tr)[0]
+            $('<td>')
+                .addClass('score-title')
+                .appendTo(tr)
+            $('<td>')
+                .addClass('score-author')
+                .appendTo(tr)
+        }
+
+        // add click
+        $(tr).on('click', (e) => {
+            log('click', elt(e.target), elt(e.currentTarget))
+            if (e.target == score.stateCell) {
+                if ($(e.target).text() == ScoreTable.closer) {
+                    ScoreTable.close(score)
                 } else {
                     ScoreTable.open(score)
-                    show(score.div!)
                 }
-            })
-            .insertAfter(after)
-        score.stateCell = $('<td>')
-            .addClass('score-state')
-            .appendTo(tr)[0]
-        $('<td>')
-            .addClass('score-title')
-            .text(score.title)
-            .appendTo(tr)
-        $('<td>')
-            .addClass('score-author')
-            .text(score.author)
-            .appendTo(tr)
+            } else {
+                ScoreTable.open(score)
+                show(score.div!)
+            }
+        })
+
+        // insert or move tr into proper place in table, set author and title
+        const i = ScoreTable.sorted.insert(score.key!)
+        // insert after assumes one row for table heading
+        $(tr).insertAfter($('#score-list-table').find('tr')[i])
+        $(tr).find('.score-author').text(score.author)
+        $(tr).find('.score-title').text(score.title)
         return i
     }
 
     static remove(path: string) {
         const score = State.byPath[path]
         if (score) {
-            const i = ScoreTable.sorted.remove(score)
+            ScoreTable.close(score)
+            const i = ScoreTable.sorted.remove(score.key!)
             // +1 assumes one row for table heading
             if (i >= 0)
                 $('#score-list-table').find('tr')[i+1].remove()
-            delete State.byPath[path]
+            $(score.div!).remove()
         }
     }
 }
@@ -319,25 +342,35 @@ class Score {
 
     pdf: PDFDocumentProxy | null = null
     author: string = ''
-    title: string = ''
-    key: string[] = []
+    title: string // default supplied by constructor
+    key: Key | null = null
 
-    constructor(dn: string, fn: string, ready?: (score: Score) => void) {
+    constructor(path: string, fn: string, ready?: (score: Score) => void) {
 
-        this.path = dn + '/' + fn
+        this.path = path
+        this.title = fn // default
         this.id = 'score-' + (Score.ids++)
 
-        // if anything goes wrong we remove ourselves from the score table
-        const error = (where: string, reason: string) => {
-            log('error', where, this.path)
-            log(reason)
-            ScoreTable.remove(this.path)        
-        }
+        // read pdf file
+        this.read(ready)
+    }
+
+    // read or re-read pdf file
+    read(ready?: (score: Score) => void) {
 
         // function to pad numbers with 0s so they sort in proper numeric order
         const key = (s: string) => {
             const zs = '0000000000'
             return s.split(' ').map(w => isNaN(<any>w)? w : (zs+w).substring(w.length, zs.length+w.length)).join(' ').toLowerCase()
+        }
+
+        // if file disappears we remove ourselves from the score table
+        const error = (where: string, reason: string) => {
+            log('error', where, this.path, reason)
+            if (!fs.existsSync(this.path)) {
+                log('removing Score for', this.path)
+                ScoreTable.remove(this.path)
+            }
         }
 
         // read pdf file
@@ -354,19 +387,18 @@ class Score {
                     (md) => {
 
                         // get metadata, compute key
-                        log('opened', this.path, pdf.numPages, 'pages')
-                        this.title = md.info.Title || fn
+                        const oldKey = this.key
+                        log('read', this.path, pdf.numPages, 'pages')
+                        this.title = md.info.Title || this.title
                         this.author = md.info.Author || '\x7f' // no author sorts to end
                         this.key = [key(this.author), key(this.title)]
                         
                         // add to score table, getting sort order i
-                        ScoreTable.remove(this.path);
-                        const i = ScoreTable.add(this)
+                        const i = ScoreTable.add(this, oldKey)
                         
-                        // get or construct empty div for our canvases
-                        const div = document.getElementById(this.id)
-                        if (!div) {
-                            // create new div, insert in correct order, start hidden
+                        // start with existing or new empty div
+                        if (!this.div) {
+                            // create our div, insert in correct order, start hidden
                             this.div = $('<div>')
                                 .attr('id', this.id)
                                 .addClass('score')
@@ -377,16 +409,17 @@ class Score {
                                 .text(ScoreTable.closer)
                                 .on('click', () => ScoreTable.close(this))
                                 .appendTo(this.div)
-                            const scores = $('.score')
-                            if (i >= scores.length)
-                                $(this.div).appendTo('#top')
-                            else
-                                $(this.div).insertBefore(scores[i])
                         } else {
-                            // use existing div, empty it
-                            this.div = div
-                            $(this.div).find('*').remove()
+                            // use existing div, remove canvases to force re-render
+                            $(this.div).find('canvas').remove()
                         }
+
+                        // put div in the proper position
+                        const scores = $('.score')
+                        if (i >= scores.length)
+                            $(this.div).appendTo('#top')
+                        else
+                            $(this.div).insertBefore(scores[i])
 
                         // render score if it was an existing visible div
                         if ($(this.div).is(':visible'))
