@@ -7,6 +7,7 @@ PDFS=$(LYS:%.ly=$(DEST)/%.pdf)
 
 $(DEST)/%.pdf: %.ly
 	$(LILYPOND) -o $(DEST)/$* $<
+	exiftool $(DEST)/$*.pdf
 	mkdir -p ../midi
 	mv $(DEST)/$*.midi ../midi || echo np
 

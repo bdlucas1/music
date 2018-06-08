@@ -22,6 +22,8 @@
   %\override Score.NonMusicalPaperColumn.page-break-permission = ##f
 }
 
+br = \break
+
 %"i" = ^\markup{\tiny i}
 %"m" = ^\markup{\tiny m}
 %"a" = ^\markup{\tiny a}
