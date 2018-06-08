@@ -161,6 +161,7 @@ class State {
 //
 
 let showing: HTMLElement
+let lastShowing: HTMLElement | null
 
 function elt(e: HTMLElement | null) {
     return e? e.tagName+':'+e.id : 'null'
@@ -171,6 +172,30 @@ function show(what: HTMLElement) {
         log('show', elt(what))
         showing = what
         showing.scrollIntoView({behavior: 'smooth'})
+    }
+}
+
+function navigate(delta: number) {
+    const visible = $('.score, #score-list').filter(':visible')
+    const scoreList = document.getElementById('score-list')!
+    if (delta == -Infinity) {
+        if (showing != scoreList) {
+            lastShowing = showing
+            show(scoreList)
+            log('lastShowing now', elt(lastShowing))
+        }
+    } else if (delta == Infinity) {
+        if (showing == scoreList && lastShowing) {
+            log('lastShowing', elt(lastShowing))
+            show(lastShowing)
+        }
+    } else {
+        let i = visible.index(showing) + delta
+        if (i < 0)
+            i = 0
+        if (i >= visible.length)
+            i = visible.length - 1
+        show(visible[i])
     }
 }
 
@@ -198,10 +223,7 @@ $(document).ready(() => {
             lastWheel = e.timeStamp
             if (dt < 40)
                 return
-            const visible = $('.score, #score-list').filter(':visible')
-            const i = visible.index(showing) + (dx > 0? 1 : -1)
-            if (i >= 0 && i < visible.length)
-                show(visible[i])
+            navigate(dx > 0? 1 : -1)
         }
     })
 
@@ -210,21 +232,14 @@ $(document).ready(() => {
     // works well with 3-finger drag on osx
     //
 
-    let lastShowing: HTMLElement | null
     let mouseMovement = 0
-
     $('body').on('mousemove', (e: any) => {
         if (e.buttons) {
             mouseMovement = e.originalEvent.movementX
-            const scoreList = document.getElementById('score-list')!
-            if (mouseMovement > 0 && showing != scoreList) {
-                lastShowing = showing
-                show(scoreList)
-                log('lastShowing now', elt(lastShowing))
-            } else if (mouseMovement < 0 && showing == scoreList && lastShowing) {
-                log('lastShowing', elt(lastShowing))
-                show(lastShowing)
-            }
+            if (mouseMovement > 0)
+                navigate(-Infinity)
+            else if (mouseMovement < 0)
+                navigate(Infinity)
         }
     })
 
@@ -241,6 +256,13 @@ $(document).ready(() => {
             s.scrollIntoView({})
     })
                  
+    $(document).on('keydown', (e) => {
+        //log(e.key)
+        if (e.key == 'ArrowLeft')
+            navigate(e.shiftKey? -Infinity : -1)
+        else if (e.key == 'ArrowRight')
+            navigate(e.shiftKey? Infinity : 1)
+    })
 })
 
 type Key = string[]
