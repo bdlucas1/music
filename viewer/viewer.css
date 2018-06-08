@@ -26,16 +26,20 @@ body {
 }
 
 #score-list-table {
-    width: 100%;
+    /*width: 100%;*/
 }
 
 .score-state {
     font-size: 8pt;
-    width: 1.5em;
+    width: 2em;
+}
+
+.score-subtitle {
+    padding-left: 3em;
 }
 
 .score-author {
-    padding-left: 2em;
+    padding-left: 3em;
 }
 
 /* each score has its own container to maintain separate scroll position */

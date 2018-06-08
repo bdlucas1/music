@@ -4,7 +4,7 @@
 \header {
   title = "Log Cabin Waltz"
   composer = "Mel Bay p. 19"
-  subject = "compact"
+  subject = "Compact"
 }
 
 \score {

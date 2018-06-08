@@ -236,9 +236,9 @@ $(document).ready(() => {
     }, true)
 
     $(window).on('resize', () => {
-        const showing = $(showing)[0]
-        if (showing)
-            showing.scrollIntoView({})
+        const s = $(showing)[0]
+        if (s)
+            s.scrollIntoView({})
     })
                  
 })
