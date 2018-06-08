@@ -9,7 +9,7 @@
   bookTitleMarkup = \markup {
     \column {
       \fill-line {\null \bold \fontsize #4 \fromproperty #'header:title \null}
-      \fill-line {\fromproperty #'header:tag \null \fromproperty #'header:composer }
+      \fill-line {\fromproperty #'header:subject \null \fromproperty #'header:composer }
     }
   }
   %page-breaking = #ly:minimal-breaking

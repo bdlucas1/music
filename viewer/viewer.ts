@@ -236,7 +236,9 @@ $(document).ready(() => {
     }, true)
 
     $(window).on('resize', () => {
-        $(showing)[0].scrollIntoView({})
+        const showing = $(showing)[0]
+        if (showing)
+            showing.scrollIntoView({})
     })
                  
 })
@@ -290,6 +292,9 @@ class ScoreTable {
                 .addClass('score-title')
                 .appendTo(tr)
             $('<td>')
+                .addClass('score-subtitle')
+                .appendTo(tr)
+            $('<td>')
                 .addClass('score-author')
                 .appendTo(tr)
         }
@@ -313,8 +318,9 @@ class ScoreTable {
         const i = ScoreTable.sorted.insert(score.key!)
         // insert after assumes one row for table heading
         $(tr).insertAfter($('#score-list-table').find('tr')[i])
-        $(tr).find('.score-author').text(score.author)
         $(tr).find('.score-title').text(score.title)
+        $(tr).find('.score-subtitle').text(score.subtitle)
+        $(tr).find('.score-author').text(score.author)
         return i
     }
 
@@ -343,6 +349,7 @@ class Score {
     pdf: PDFDocumentProxy | null = null
     author: string = ''
     title: string // default supplied by constructor
+    subtitle: string = ''
     key: Key | null = null
 
     constructor(path: string, fn: string, ready?: (score: Score) => void) {
@@ -390,8 +397,9 @@ class Score {
                         const oldKey = this.key
                         log('read', this.path, pdf.numPages, 'pages')
                         this.title = md.info.Title || this.title
+                        this.subtitle = md.info.Subtitle || md.info.Subject || ''
                         this.author = md.info.Author || '\x7f' // no author sorts to end
-                        this.key = [key(this.author), key(this.title)]
+                        this.key = [key(this.author), key(this.title), key(this.subtitle)]
                         
                         // add to score table, getting sort order i
                         const i = ScoreTable.add(this, oldKey)

@@ -11,6 +11,7 @@
   source	    = "Bach-Gesellschaft Ausgabe 1851-1899 Band 43 (1894)"
   sourceurl         = "http://imslp.org/wiki/Notebook_for_Anna_Magdalena_Bach_(Bach,_Johann_Sebastian)"
   style	            = "Baroque"
+  subject	    = "Piano"
   copyright	    = "Public Domain"
   maintainer	    = "Steven McDougall"
   maintainerEmail   = "swmcd@world.std.com"

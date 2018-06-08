@@ -1,5 +1,5 @@
-\version "2.12.1"
-\include "english.ly"
+\include "style.ily"
+\version "2.18.2"
 
 \header
 {
@@ -10,8 +10,8 @@
   sourceurl         = "http://imslp.org/wiki/Notebook_for_Anna_Magdalena_Bach_(Bach,_Johann_Sebastian)"
   style	            = "Baroque"
   copyright	    = "Public Domain"
+  subject	    = "GDAE Ukulele"
 }
-
 
 upper = \relative a {
 
