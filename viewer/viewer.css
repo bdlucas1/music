@@ -25,6 +25,10 @@ body {
     overflow-y: scroll;
 }
 
+th {
+    padding-bottom: 1ex;
+}
+
 #score-list-table {
     /*width: 100%;*/
 }
