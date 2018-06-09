@@ -168,29 +168,34 @@ function elt(e: HTMLElement | null) {
 }
 
 function show(what: HTMLElement) {
+    log('show what:', elt(what), 'showing:', elt(showing))
     if (showing != what) {
-        log('show', elt(what))
         showing = what
         showing.scrollIntoView({behavior: 'smooth'})
     }
 }
 
-function navigate(delta: number) {
+function navigate(op: 1 | -1 | 'scoreList' | 'lastShowing' | 'toggle' ) {
     const visible = $('.score, #score-list').filter(':visible')
     const scoreList = document.getElementById('score-list')!
-    if (delta == -Infinity) {
+    if (op == 'scoreList') {
         if (showing != scoreList) {
             lastShowing = showing
             show(scoreList)
-            log('lastShowing now', elt(lastShowing))
         }
-    } else if (delta == Infinity) {
+    } else if (op == 'lastShowing') {
         if (showing == scoreList && lastShowing) {
-            log('lastShowing', elt(lastShowing))
+            show(lastShowing)
+        }
+    } else if (op == 'toggle') {
+        if (showing != scoreList) {
+            lastShowing = showing
+            show(scoreList)
+        } else if (lastShowing) {
             show(lastShowing)
         }
     } else {
-        let i = visible.index(showing) + delta
+        let i = visible.index(showing) + op
         if (i < 0)
             i = 0
         if (i >= visible.length)
@@ -237,9 +242,9 @@ $(document).ready(() => {
         if (e.buttons) {
             mouseMovement = e.originalEvent.movementX
             if (mouseMovement > 0)
-                navigate(-Infinity)
+                navigate('scoreList')
             else if (mouseMovement < 0)
-                navigate(Infinity)
+                navigate('lastShowing')
         }
     })
 
@@ -258,10 +263,17 @@ $(document).ready(() => {
                  
     $(document).on('keydown', (e) => {
         //log(e.key)
+        let handled = true
         if (e.key == 'ArrowLeft')
-            navigate(e.shiftKey? -Infinity : -1)
+            navigate(e.shiftKey? 'scoreList' : -1)
         else if (e.key == 'ArrowRight')
-            navigate(e.shiftKey? Infinity : 1)
+            navigate(e.shiftKey? 'lastShowing' : 1)
+        else if (e.key == 'Tab' || e.key == 'Enter')
+            navigate('toggle')
+        else
+            handled = false
+        if (handled)
+            e.preventDefault()
     })
 })
 
