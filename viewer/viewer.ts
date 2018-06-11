@@ -434,35 +434,8 @@ class Score {
                                 .text(ScoreTable.closer)
                                 .on('click', () => ScoreTable.close(this))
                                 .appendTo(this.div)
-                            $(this.div).on('dblclick', (e) => {
-                                const svg = $('<svg><path>')
-                                    .addClass('marker')
-                                    .css('left', (100 * e.clientX! / window.innerWidth) + 'vw')
-                                    .css('top', (100 * e.clientY! / window.innerWidth) + 'vw')
-                                    .appendTo(this.div!)
-                                    .on('dblclick', (e) => {
-                                        log('xxx dblclick')
-                                        svg.remove()
-                                        e.stopPropagation()
-                                    })
-                                    .on('mousedown', (e) => {
-                                        const mousemove = (e: any) => {
-                                            svg.css('left', e.clientX + 'px')
-                                            svg.css('top', e.clientY + 'px')
-                                        }
-                                        $(this.div!).on('mousemove', mousemove);
-                                        $(this.div!).one('mouseup', (e) => {
-                                            log('xxx mouseup')
-                                            $(this.div!).unbind('mousemove', mousemove)
-                                        })
-                                        window.addEventListener('click', (e) => {
-                                            e.stopPropagation()
-                                        }, {capture: true, once: true})
-                                    })
-                                svg
-                                    .attr('viewBox', svg.css('--viewBox'))
-                                    .find('path').attr('d', svg.css('--path'))
-                            })
+                            $(this.div).on('dblclick',
+                                           (e) => this.addMarker(e.clientX!, e.clientY!))
                         } else {
                             // use existing div, remove canvases to force re-render
                             $(this.div).find('canvas').remove()
@@ -526,6 +499,39 @@ class Score {
                 })
             })
         }
+    }
+
+    positionMarker(svg: HTMLElement, x: number, y: number) {
+        $(svg).css('left', (100 * x / window.innerWidth) + 'vw')
+        $(svg).css('top', (100 * y / window.innerWidth) + 'vw')
+    }
+
+    addMarker(x: number, y: number) {
+        const svg = $('<svg><path>')
+            .addClass('marker')
+            .appendTo(this.div!)
+            .on('dblclick', (e) => {
+                log('xxx dblclick')
+                svg.remove()
+                e.stopPropagation()
+            })
+            .on('mousedown', (e) => {
+                const mousemove = (e: any) => {
+                    this.positionMarker(svg[0], e.clientX, e.clientY)
+                }
+                $(this.div!).on('mousemove', mousemove);
+                $(this.div!).one('mouseup', (e) => {
+                    log('xxx mouseup')
+                    $(this.div!).unbind('mousemove', mousemove)
+                })
+                window.addEventListener('click', (e) => {
+                    e.stopPropagation()
+                }, {capture: true, once: true})
+            })
+        svg
+            .attr('viewBox', svg.css('--viewBox'))
+            .find('path').attr('d', svg.css('--path'))
+        this.positionMarker(svg[0], x, y)
     }
 }
 
