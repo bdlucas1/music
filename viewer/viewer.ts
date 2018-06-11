@@ -146,7 +146,9 @@ class State {
                     scrollTop: score.div!.scrollTop
                 }
                 try {
-                    fs.writeFileSync(State.fn, JSON.stringify(State.state, null, 2))
+                    const fnNew = State.fn + '-new'
+                    fs.writeFileSync(fnNew, JSON.stringify(State.state, null, 2))
+                    fs.renameSync(fnNew, State.fn)
                 } catch (e) {
                     log(State.fn + ':' + e)
                 }
