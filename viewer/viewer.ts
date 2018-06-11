@@ -4,6 +4,9 @@ import * as fs from 'fs'
 import * as path from 'path'
 import {remote} from 'electron'
 
+//(<any>window).$ = (<any>window).jQuery = $
+//require('jquery-ui-dist/jquery-ui')
+
 const log = remote.getGlobal('console').log
 
 window.onerror = (error, url, line) => {
@@ -234,29 +237,6 @@ $(document).ready(() => {
         }
     })
 
-    //
-    // drag gesture swaps between score list and current showing score
-    // works well with 3-finger drag on osx
-    //
-
-    let mouseMovement = 0
-    $('body').on('mousemove', (e: any) => {
-        if (e.buttons) {
-            mouseMovement = e.originalEvent.movementX
-            if (mouseMovement > 0)
-                navigate('scoreList')
-            else if (mouseMovement < 0)
-                navigate('lastShowing')
-        }
-    })
-
-    // capture click if it resulted from a drag gesture
-    $('body')[0].addEventListener('click', (e) => {
-        if (mouseMovement)
-            e.preventDefault()
-        mouseMovement = 0
-    }, true)
-
     $(window).on('resize', () => {
         const s = $(showing)[0]
         if (s)
@@ -453,12 +433,31 @@ class Score {
                                 .text(ScoreTable.closer)
                                 .on('click', () => ScoreTable.close(this))
                                 .appendTo(this.div)
-                            $(this.div).on('click', (e) => {
+                            $(this.div).on('dblclick', (e) => {
                                 const svg = $('<svg><path>')
                                     .addClass('marker')
                                     .css('left', (100 * e.clientX! / window.innerWidth) + 'vw')
                                     .css('top', (100 * e.clientY! / window.innerWidth) + 'vw')
                                     .appendTo(this.div!)
+                                    .on('dblclick', (e) => {
+                                        log('xxx dblclick')
+                                        svg.remove()
+                                        e.stopPropagation()
+                                    })
+                                    .on('mousedown', (e) => {
+                                        const mousemove = (e: any) => {
+                                            svg.css('left', e.clientX + 'px')
+                                            svg.css('top', e.clientY + 'px')
+                                        }
+                                        $(this.div!).on('mousemove', mousemove);
+                                        $(this.div!).one('mouseup', (e) => {
+                                            log('xxx mouseup')
+                                            $(this.div!).unbind('mousemove', mousemove)
+                                        })
+                                        window.addEventListener('click', (e) => {
+                                            e.stopPropagation()
+                                        }, {capture: true, once: true})
+                                    })
                                 svg
                                     .attr('viewBox', svg.css('--viewBox'))
                                     .find('path').attr('d', svg.css('--path'))
