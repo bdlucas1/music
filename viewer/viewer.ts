@@ -64,30 +64,27 @@ class SortedArray<T> {
 
 type Save = {
     ppi: number,
+    magnification: number,
     scores: {
         [path: string]: {
             open: boolean,
             scrollTop: number
+            magnification: number
         }
     }
+    [field: string]: any
 }
 
 class State {
 
     static byPath: {[path: string]: Score} = {}
 
-    static state: {
-        ppi: number,
-        scores: {
-            [path: string]: {
-                open: boolean,
-                scrollTop: number
-            }
-        }
-    } = {
-        ppi: 96, // default is nominal css pixels
+    static defaultState: Save = {
+        ppi: 96, // default is nominal css pixels per inch
+        magnification: 1,
         scores: {}
     }
+    static state: Save = State.defaultState
 
     private static fn = process.env.HOME + '/.viewer';
     private static pendingStart = 0
@@ -95,12 +92,14 @@ class State {
 
     static init(dn: string) {
 
-        // load saved state
+        // load saved state, supplying defaults if necessary
         try {
             log('loading', State.fn)
-            State.state = JSON.parse(fs.readFileSync(State.fn).toString())
+            const state: Save = JSON.parse(fs.readFileSync(State.fn).toString())
+            for (const key in State.defaultState)
+                State.state[key] = state[key] || State.defaultState[key]
         } catch (e) {
-            log(State.fn + ':' + e)
+            log(State.fn + ': ' + e)
         }
 
         // populate with files, initializing each score to saved state
@@ -146,14 +145,15 @@ class State {
                 const score = State.byPath[path]
                 State.state.scores[path] = {
                     open: $(score.div!).is(':visible'),
-                    scrollTop: score.div!.scrollTop
+                    scrollTop: score.div!.scrollTop,
+                    magnification: score.magnification
                 }
                 try {
                     const fnNew = State.fn + '-new'
                     fs.writeFileSync(fnNew, JSON.stringify(State.state, null, 2))
                     fs.renameSync(fnNew, State.fn)
                 } catch (e) {
-                    log(State.fn + ':' + e)
+                    log(State.fn + ': ' + e)
                 }
             }
         }
@@ -361,6 +361,7 @@ class Score {
     id: string
     div: HTMLElement | null = null
     stateCell: HTMLElement | null = null
+    magnification: number = 1
 
     pdf: PDFDocumentProxy | null = null
     author: string = ''
@@ -517,7 +518,8 @@ class Score {
                 canvas.width = viewport.width
                 canvas.height = viewport.height
                 const screenWidth = screen.width * window.devicePixelRatio
-                canvas.style.width = (viewport.width / screenWidth * 100) + 'vw'
+                const scoreWidth = State.state.magnification * this.magnification * viewport.width
+                canvas.style.width = (scoreWidth / screenWidth * 100) + 'vw'
                 page.render({
                     canvasContext: canvas.getContext('2d')!,
                     viewport: viewport
