@@ -80,6 +80,6 @@ th {
     --viewBox: 0 0 100 100;
     --path: M 0 50 L 50 100 L 100 50 L 50 0 Z;
     stroke-width: 18;
-    stroke: blue;
+    stroke: rgb(50,30,255);
     fill: none;
 }
