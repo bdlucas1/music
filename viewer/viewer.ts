@@ -119,7 +119,7 @@ class State {
             }
             State.go()
         })
-
+        
         // watch for changes
         fs.watch(dn, {}, (e, fn) => {
             if ((<any>fn).endsWith('.pdf')) {
@@ -451,6 +451,16 @@ class Score {
                                 .text(ScoreTable.closer)
                                 .on('click', () => ScoreTable.close(this))
                                 .appendTo(this.div)
+                            $(this.div).on('click', (e) => {
+                                const svg = $('<svg><path>')
+                                    .addClass('marker')
+                                    .css('left', (100 * e.clientX! / window.innerWidth) + 'vw')
+                                    .css('top', (100 * e.clientY! / window.innerWidth) + 'vw')
+                                    .appendTo(this.div!)
+                                svg
+                                    .attr('viewBox', svg.css('--viewBox'))
+                                    .find('path').attr('d', svg.css('--path'))
+                            })
                         } else {
                             // use existing div, remove canvases to force re-render
                             $(this.div).find('canvas').remove()
