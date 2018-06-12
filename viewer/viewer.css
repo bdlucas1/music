@@ -67,6 +67,21 @@ th {
     cursor: default;
 }
 
+/* basic glyph, and dimensions when used as a glyph on score list */
+.marker-glyph {
+    --viewBox: 0 0 100 100;
+    --path: M 0 50 L 50 100 L 100 50 L 50 0 Z;
+    stroke-width: 18;
+    stroke: rgb(50,30,255);
+    fill: none;
+    width: 0.75em;
+    height: 0.75em;
+    margin-bottom: -0.06em;
+    padding-left: 0.8em;
+    overflow: visible;
+}
+
+/* dimensions when used as a marker per se */
 .marker {
     position: absolute;
     /*background: rgb(200,200,200);*/
@@ -77,9 +92,4 @@ th {
     margin-left: calc(-0.5 * var(--size) - var(--extra));
     margin-top: calc(-0.5 * var(--size) - var(--extra));
     padding: calc(var(--extra));
-    --viewBox: 0 0 100 100;
-    --path: M 0 50 L 50 100 L 100 50 L 50 0 Z;
-    stroke-width: 18;
-    stroke: rgb(50,30,255);
-    fill: none;
 }

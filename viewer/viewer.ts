@@ -114,9 +114,11 @@ class State {
                         if (scoreState) {
                             if (scoreState.open)
                                 ScoreTable.open(score)
-                            setTimeout(() => {score.div!.scrollTop = scoreState.scrollTop}, 100) 
-                            for (const position of scoreState.markers)
-                                score.addMarker(position)
+                            if (scoreState.scrollTop)
+                                setTimeout(()=> {score.div!.scrollTop = scoreState.scrollTop}, 100) 
+                            if (scoreState.markers)
+                                for (const position of scoreState.markers)
+                                    score.addMarker(position)
                         }
                         State.pendingStart--
                     })
@@ -146,19 +148,23 @@ class State {
             State.state.scores = {}
             for (const path in State.byPath) {
                 const score = State.byPath[path]
-                State.state.scores[path] = {
+                const state = {
                     open: $(score.div!).is(':visible'),
                     scrollTop: score.div!.scrollTop,
                     magnification: score.magnification,
                     markers: $(score.div!).find('.marker').get().map((m) => [m.style.left!, m.style.top!])
                 }
-                try {
-                    const fnNew = State.fn + '-new'
-                    fs.writeFileSync(fnNew, JSON.stringify(State.state, null, 2))
-                    fs.renameSync(fnNew, State.fn)
-                } catch (e) {
-                    log(State.fn + ': ' + e)
-                }
+                State.state.scores[path] = state
+                $(score.titleCell!).find('.marker-glyph').remove()
+                if (state.markers.length > 0)
+                    score.markerGlyph(score.titleCell!)
+            }
+            try {
+                const fnNew = State.fn + '-new'
+                fs.writeFileSync(fnNew, JSON.stringify(State.state, null, 2))
+                fs.renameSync(fnNew, State.fn)
+            } catch (e) {
+                log(State.fn + ': ' + e)
             }
         }
         setTimeout(State.go, State.interval)
@@ -308,9 +314,9 @@ class ScoreTable {
             score.stateCell = $('<td>')
                 .addClass('score-state')
                 .appendTo(tr)[0]
-            $('<td>')
+            score.titleCell = $('<td>')
                 .addClass('score-title')
-                .appendTo(tr)
+                .appendTo(tr)[0]
             $('<td>')
                 .addClass('score-subtitle')
                 .appendTo(tr)
@@ -365,6 +371,7 @@ class Score {
     id: string
     div: HTMLElement | null = null
     stateCell: HTMLElement | null = null
+    titleCell: HTMLElement | null = null
     magnification: number = 1
 
     pdf: PDFDocumentProxy | null = null
@@ -516,11 +523,20 @@ class Score {
         $(svg).css('top', position[1])
     }
 
+    markerGlyph(parent: HTMLElement) {
+        const svg = $('<svg><path>')
+            .addClass('marker-glyph')
+            .appendTo(parent)
+        svg
+            .attr('viewBox', svg.css('--viewBox'))
+            .find('path').attr('d', svg.css('--path'))
+        return svg
+    }
+
     addMarker(position: string[]) {
         log('addMarker', position)
-        const svg = $('<svg><path>')
+        const svg = this.markerGlyph(this.div!)
             .addClass('marker')
-            .appendTo(this.div!)
             .on('dblclick', (e) => {
                 svg.remove()
                 e.stopPropagation()
@@ -542,12 +558,13 @@ class Score {
                     move()
                 }
                 $(this.div!).on('mousemove', mousemove);
-                $(this.div!).one('mouseup', (e) => $(this.div!).unbind('mousemove', mousemove))
-                window.addEventListener('click', (e) => e.stopPropagation(), {capture: true, once: true})
+                $(this.div!).one('mouseup', (e) => {
+                    $(this.div!).unbind('mousemove', mousemove)
+                })
+                window.addEventListener('click', (e) => {
+                    e.stopPropagation()
+                }, {capture: true, once: true})
             })
-        svg
-            .attr('viewBox', svg.css('--viewBox'))
-            .find('path').attr('d', svg.css('--path'))
         this.positionMarker(svg[0], position)
     }
 }
