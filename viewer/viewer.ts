@@ -68,8 +68,9 @@ type Save = {
     scores: {
         [path: string]: {
             open: boolean,
-            scrollTop: number
-            magnification: number
+            scrollTop: number,
+            magnification: number,
+            markers: string[][]
         }
     }
     [field: string]: any
@@ -114,6 +115,8 @@ class State {
                             if (scoreState.open)
                                 ScoreTable.open(score)
                             setTimeout(() => {score.div!.scrollTop = scoreState.scrollTop}, 100) 
+                            for (const position of scoreState.markers)
+                                score.addMarker(position)
                         }
                         State.pendingStart--
                     })
@@ -146,7 +149,8 @@ class State {
                 State.state.scores[path] = {
                     open: $(score.div!).is(':visible'),
                     scrollTop: score.div!.scrollTop,
-                    magnification: score.magnification
+                    magnification: score.magnification,
+                    markers: $(score.div!).find('.marker').get().map((m) => [m.style.left!, m.style.top!])
                 }
                 try {
                     const fnNew = State.fn + '-new'
@@ -435,7 +439,7 @@ class Score {
                                 .on('click', () => ScoreTable.close(this))
                                 .appendTo(this.div)
                             $(this.div).on('dblclick', (e) => {
-                                this.addMarker(e.clientX!, e.clientY! + this.div!.scrollTop)
+                                this.addMarker(this.px2vw(e.clientX!, e.clientY!))
                             })
                         } else {
                             // use existing div, remove canvases to force re-render
@@ -502,13 +506,18 @@ class Score {
         }
     }
 
-    positionMarker(svg: HTMLElement, x: number, y: number) {
-        $(svg).css('left', (100 * x / window.innerWidth) + 'vw')
-        $(svg).css('top', (100 * y / window.innerWidth) + 'vw')
+    px2vw(x: number, y: number) {
+        const vw = (n: number) => (100 * n / window.innerWidth) + 'vw'
+        return [vw(x), vw(y + this.div!.scrollTop)]
     }
 
-    addMarker(x: number, y: number) {
-        log('addMarker', x, y)
+    positionMarker(svg: HTMLElement, position: string[]) {
+        $(svg).css('left', position[0])
+        $(svg).css('top', position[1])
+    }
+
+    addMarker(position: string[]) {
+        log('addMarker', position)
         const svg = $('<svg><path>')
             .addClass('marker')
             .appendTo(this.div!)
@@ -518,35 +527,28 @@ class Score {
             })
             .on('mousedown', (e) => {
                 let x = e.clientX!, y = e.clientY!
-                let scrolling = false
-                const scroll = () => {
+                let pending = false
+                const move = () => {
                     if (y < 10) {
                         this.div!.scrollTop += y - 10
-                        this.positionMarker(svg[0], x, y + this.div!.scrollTop)
-                        setTimeout(scroll, 50)
-                        scrolling = true
-                    } else {
-                        scrolling = false
+                        if (!pending)
+                            setTimeout(() => {pending = false; move()}, 30)
+                        pending = true
                     }
+                    this.positionMarker(svg[0], this.px2vw(x, y))
                 }
                 const mousemove = (e: any) => {
                     x = e.clientX, y = e.clientY
-                    this.positionMarker(svg[0], x, y + this.div!.scrollTop)
-                    if (!scrolling)
-                        scroll()
+                    move()
                 }
                 $(this.div!).on('mousemove', mousemove);
-                $(this.div!).one('mouseup', (e) => {
-                    $(this.div!).unbind('mousemove', mousemove)
-                })
-                window.addEventListener('click', (e) => {
-                    e.stopPropagation()
-                }, {capture: true, once: true})
+                $(this.div!).one('mouseup', (e) => $(this.div!).unbind('mousemove', mousemove))
+                window.addEventListener('click', (e) => e.stopPropagation(), {capture: true, once: true})
             })
         svg
             .attr('viewBox', svg.css('--viewBox'))
             .find('path').attr('d', svg.css('--path'))
-        this.positionMarker(svg[0], x, y)
+        this.positionMarker(svg[0], position)
     }
 }
 
