@@ -54,40 +54,40 @@ upper = \relative a {
 
 lowerarranged = \relative a {
 
-  \repeat volta 2 {
-    \partial 4 r4 	    |
-    r4 r e        	    | % 1
-    a,8. b16 c4 b  	    | % 2
-    c4 a e' ~     	    | % 3
-    e4 e8 d c b   	    | % 4
-    a4 a a        	    | % 5
-    gs4 gs gs     	    | % 6
-    g!4 g g       	    | % 7
-    fs'4 fs fs     	    | % 8
-    f!4 f f       	    | % 9
-    e4 e e        	    | % 10
-    d4 d d        	    | % 11
-    e4 e        	      % 12
-  }
-  \repeat volta 2 {
-    r4 	    		    |
-    r4 r g,       	    | % 13
-    c8. d16 e4 d  	    | % 14
-    e4 c g' ~     	    | % 15
-    g4 g8 f e d   	    | % 16
-    c'4 c c        	    | % 17
-    b4 g c        	    | % 18
-    a4 f g        	    | % 19
-    c,4 c r      	    | % 20
-    r4 r a'       	    | % 21
-    bf4 b8.\trill a32 b c4  | % 22
-    b4 e, b'                | % 23
-    c4 cs8.\trill b32 cs a4 | % 24
-    d4 e f                  | % 25
-    c2 f4                   | % 26
-    d4 e e,                 | % 27
-    a2 s4                   | % 28
-  }
+%  \repeat volta 2 {
+    \partial 4 s4	|
+			| % 1
+			| % 2
+			| % 3
+			| % 4
+			| % 5
+			| % 6
+			| % 7
+			| % 8
+			| % 9
+			| % 10
+			| % 11
+			  % 12
+%  }
+%  \repeat volta 2 {
+			|
+			| % 13
+			| % 14
+			| % 15
+			| % 16
+			| % 17
+			| % 18
+			| % 19
+			| % 20
+			| % 21
+			| % 22
+			| % 23
+			| % 24
+			| % 25
+			| % 26
+			| % 27
+			| % 28
+%  }
 }
 
 loweroriginal = \relative a {
