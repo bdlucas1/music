@@ -434,8 +434,9 @@ class Score {
                                 .text(ScoreTable.closer)
                                 .on('click', () => ScoreTable.close(this))
                                 .appendTo(this.div)
-                            $(this.div).on('dblclick',
-                                           (e) => this.addMarker(e.clientX!, e.clientY!))
+                            $(this.div).on('dblclick', (e) => {
+                                this.addMarker(e.clientX!, e.clientY! + this.div!.scrollTop)
+                            })
                         } else {
                             // use existing div, remove canvases to force re-render
                             $(this.div).find('canvas').remove()
@@ -507,21 +508,35 @@ class Score {
     }
 
     addMarker(x: number, y: number) {
+        log('addMarker', x, y)
         const svg = $('<svg><path>')
             .addClass('marker')
             .appendTo(this.div!)
             .on('dblclick', (e) => {
-                log('xxx dblclick')
                 svg.remove()
                 e.stopPropagation()
             })
             .on('mousedown', (e) => {
+                let x = e.clientX!, y = e.clientY!
+                let scrolling = false
+                const scroll = () => {
+                    if (y < 10) {
+                        this.div!.scrollTop += y - 10
+                        this.positionMarker(svg[0], x, y + this.div!.scrollTop)
+                        setTimeout(scroll, 50)
+                        scrolling = true
+                    } else {
+                        scrolling = false
+                    }
+                }
                 const mousemove = (e: any) => {
-                    this.positionMarker(svg[0], e.clientX, e.clientY)
+                    x = e.clientX, y = e.clientY
+                    this.positionMarker(svg[0], x, y + this.div!.scrollTop)
+                    if (!scrolling)
+                        scroll()
                 }
                 $(this.div!).on('mousemove', mousemove);
                 $(this.div!).one('mouseup', (e) => {
-                    log('xxx mouseup')
                     $(this.div!).unbind('mousemove', mousemove)
                 })
                 window.addEventListener('click', (e) => {
