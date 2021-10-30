@@ -7,9 +7,12 @@ SCORES=$(LYS:%.ly=$(SCORES_DIR)/%.pdf)
 
 $(SCORES_DIR)/%.pdf: %.ly
 	$(LILYPOND) -o $(SCORES_DIR)/$* $<
-	exiftool $(SCORES_DIR)/$*.pdf
-	mkdir -p ../midi
-	mv $(SCORES_DIR)/$*.midi ../midi || echo np
+	#exiftool $(SCORES_DIR)/$*.pdf
+	#mkdir -p ../midi
+	#mv $(SCORES_DIR)/$*.midi ../midi || echo np
+	open -a Preview $(SCORES_DIR)/$*.pdf
+
+all: $(SCORES) #../pdfs/mel-bay.pdf
 
 ../pdfs/mel-bay.pdf:
 	mkdir -p ../pdfs
@@ -30,5 +33,4 @@ $(SCORES_DIR)/%.pdf: %.ly
 	   ../scores/mel-bay-log-cabin-waltz-2.pdf \
 	   ../scores/mel-bay-home-waltz.pdf \
 
-all: $(SCORES) ../pdfs/mel-bay.pdf
 
