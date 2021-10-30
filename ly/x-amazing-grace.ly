@@ -1,6 +1,12 @@
 \version "2.18.2"
 \include "style.ily"
 
+% fix
+"p" = \P
+"i" = \I
+"m" = \M
+"a" = \A
+
 \header {
   title = "Amazing Grace"
   composer = "Traditional"

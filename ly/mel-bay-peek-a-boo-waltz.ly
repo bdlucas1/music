@@ -1,6 +1,12 @@
 \include "style.ily"
 \version "2.18.2"
 
+% fix
+"p" = \P
+"i" = \I
+"m" = \M
+"a" = \A
+
 \header {
   title = "Peek-a-Boo Waltz"
   composer = "Mel Bay p. 12"
