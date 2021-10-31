@@ -40,10 +40,11 @@ br = \break
 
 % \finger seems to be necessary to position it like a fingering
 % \text needed to override apparently weird font implied by \finger
-"P" = -\finger\markup\text\italic\fontsize #3 "p"
-"I" = -\finger\markup\text\italic\fontsize #3 "i"
-"M" = -\finger\markup\text\italic\fontsize #3 "m"
-"A" = -\finger\markup\text\italic\fontsize #3 "a"
+% spaces ensure it gets positioned above or below stems
+"P" = -\finger\markup\text\italic\fontsize #3 " p "
+"I" = -\finger\markup\text\italic\fontsize #3 " i "
+"M" = -\finger\markup\text\italic\fontsize #3 " m "
+"A" = -\finger\markup\text\italic\fontsize #3 " a "
 
 % "trip" from http://lsr.di.unimi.it/LSR/Snippet?id=328
 triplet = #(define-music-function (parser location m1 m2 m3) 
