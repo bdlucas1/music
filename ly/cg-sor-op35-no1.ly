@@ -1,13 +1,10 @@
 \version "2.18.2"
 \include "style.ily"
 
-% From First Pieces for Classical Guitar, Joseph Alexander
-
 \header {
   title = "Andante Op. 35 No. 1"
   composer = "Fernando Sor"
 }
-
 
 {
   \clef "treble_8" \time 4/4 \key c \major 
@@ -19,8 +16,8 @@
       b2 c | d2 e | b4 b c a |  g4 g g g |
       g'2 e | f d | e c | b4 g g g |
       g'2 e | f d | e c | b r |
-      c4 g c e | g e c g | a f' d c | b g a b |
-      c4 g c e | e a, d f | e c d b | c2.
+      c4\M g c e\A | g\M e\A c g | a\M f'\A d c | b\M g a b\A |
+      c4\M g c e\A | e\M a, d f\A | e\M c\I d\M b\I | c2.\A
     }
     \\
     \relative c {
@@ -31,9 +28,27 @@
       e'4 g c, g' | d g b, g' | c, g' e g | d1 |
       e4 g c, g' | d g b, g' | c, g' a, g' | g, g' f d |
       c1 | e | f | g2 f |
-      e1 | f | g2 g, | c4 <e g> c 
+      e1 | f | g2 g, | c4\P <e g>\M\I c\P
     }
   >>
   r4 |
 }
 
+\markuplist { \override-lines #'(baseline-skip . 3) {
+  \vspace #1
+  \wordwrap {
+    Fingerings from Easy Classical Guitar Vol. 1, Bradford Werner, with some modifications.
+  }
+  \vspace #0.7
+  \wordwrap {
+    Notes from ECGMV1 and First Pieces for Classical Guitar, Joseph Alexander.
+  }
+  \vspace #0.3
+  \wordwrap {
+    Is the voicing (stem direction) in measure 4 correct?
+  }
+  \vspace #0.3
+  \wordwrap {
+    Is the e in measure 30 correct?
+  }
+}}
