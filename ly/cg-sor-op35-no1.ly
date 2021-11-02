@@ -28,7 +28,7 @@
       e'4 g c, g' | d g b, g' | c, g' e g | d1 |
       e4 g c, g' | d g b, g' | c, g' a, g' | g, g' f d |
       c1 | e | f | g2 f |
-      e1 | f | g2 g, | c4\P <e g>\M\I c\P
+      e1 | f | g2 g,-2 | c4\P <e g>\M\I c\P
     }
   >>
   r4 |
@@ -41,11 +41,19 @@
   }
   \vspace #0.7
   \wordwrap {
-    Notes from ECGMV1 and First Pieces for Classical Guitar, Joseph Alexander.
+    Music from ECGMV1 and First Pieces for Classical Guitar, Joseph Alexander.
   }
   \vspace #0.3
   \wordwrap {
     Is the voicing (stem direction) in measure 4 correct?
+    \score {
+      \layout { ragged-right = ##t }
+      <<
+        \relative c'' {b4\M d\A g, f\P}
+        \\
+        \relative c'' {g2\P g\I}
+      >>
+    }
   }
   \vspace #0.3
   \wordwrap {
