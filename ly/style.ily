@@ -18,6 +18,7 @@
 
 \layout {
   \set Timing.beamHalfMeasure = ##f
+  \set Score.alternativeNumberingStyle = #'numbers-with-letters
   indent = 0
   %\override Score.NonMusicalPaperColumn.page-break-permission = ##f
 }
@@ -42,10 +43,10 @@ br = \break
 % \text needed to override apparently weird font implied by \finger
 % had added spaces before and after e.g. " p " to ensure it gets positioned above or below stems,
 % but setting Fingering.add-stem-support (below) accomplishes same thing, for all fingerings
-"P" = -\finger\markup\text\italic\fontsize #3 "p"
-"I" = -\finger\markup\text\italic\fontsize #3 "i"
-"M" = -\finger\markup\text\italic\fontsize #3 "m"
-"A" = -\finger\markup\text\italic\fontsize #3 "a"
+"P" = -\finger\markup\text\italic\fontsize #3 " p "
+"I" = -\finger\markup\text\italic\fontsize #3 " i "
+"M" = -\finger\markup\text\italic\fontsize #3 " m "
+"A" = -\finger\markup\text\italic\fontsize #3 " a "
 
 % "trip" from http://lsr.di.unimi.it/LSR/Snippet?id=328
 triplet = #(define-music-function (parser location m1 m2 m3) 
@@ -109,5 +110,4 @@ makechord =
          (set! (ly:music-property m 'duration) d)
          m)))
       (ly:music-deep-copy m))))
-
 
